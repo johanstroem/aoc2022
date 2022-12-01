@@ -1,11 +1,6 @@
-
-
 import events from 'events'
-// const events = require('events');
 import fs from 'fs'
-// const fs = require('fs');
 import readline from 'readline'
-// const readline = require('readline');
 
 async function processLineByLine(filename) {
     let elfcount = 1
@@ -43,10 +38,13 @@ async function processLineByLine(filename) {
 async function calorieCount() {
 
     const elfs = await createCalorieObject()
-
     const values = Object.values(elfs)
+    const sorted = values.sort((a, b) => b - a)
 
-    console.log(Math.max(...values))
+    const max = sorted[0]
+    console.log(max);
+    const top3 = sorted.slice(0, 3).reduce((tot, val) => tot += val, 0)
+    console.log(top3)
 }
 
 async function createCalorieObject() {
