@@ -59,4 +59,25 @@ describe("index", () => {
       expect(result).toBe(6);
     });
   });
+
+
+  describe("calculateScore", () => {
+    it("should return 8 points for ROCK(A) vs PAPER (Y)", async () => {
+      expect.assertions(1);
+      const result = calculateScore(["A", "Y"]);
+      expect(result).toBe(8);
+    });
+
+    it("should return 1 points for PAPER(B) vs ROCK(X)", async () => {
+      expect.assertions(1);
+      const result = calculateScore(["B", "X"]);
+      expect(result).toBe(1);
+    });
+
+    it("should return 6 points for SCISSOR(C) vs SCISSOR (Z)", async () => {
+      expect.assertions(1);
+      const result = calculateScore(["C", "Z"]);
+      expect(result).toBe(6);
+    });
+  });
 });

@@ -13,7 +13,8 @@ async function rockPaperScissor() {
     });
 
     rl.on("line", (line) => {
-      score += calculateScore(parseLine(line));
+      const mappedMove = calculateMove(parseLine(line))
+      score += calculateScore(mappedMove);
     });
 
     await events.once(rl, "close");
@@ -46,16 +47,24 @@ type PlayerMoves = "X" | "Y" | "Z";
 //   Z: "SCISSOR",
 // };
 
+const PLAYER_DESIRED_OUTCOME = {
+  X: "LOSE",
+  Y: "DRAW",
+  Z: "WIN",
+};
+
+type PlayerDesiredOutcome = keyof typeof PLAYER_DESIRED_OUTCOME;
+
 const MOVE_SCORE: Record<PlayerMoves, 1 | 2 | 3> = {
   X: 1,
   Y: 2,
   Z: 3,
 };
 
-// const RESULT_SCORE: Record<"WIN" | "DRAW" | "LOOSE", 0 | 3 | 6> = {
+// const RESULT_SCORE: Record<"WIN" | "DRAW" | "LOSE", 0 | 3 | 6> = {
 //   WIN: 6,
 //   DRAW: 3,
-//   LOOSE: 0,
+//   LOSE: 0,
 // };
 
 function calculateScore([opponent, player]: [
@@ -70,6 +79,23 @@ function calculateScore([opponent, player]: [
   return score;
 }
 
+function calculateMove([opponent, playerDesiredOutcome]: [
+  OpponentMoves,
+  PlayerDesiredOutcome
+]): [OpponentMoves, PlayerMoves] {
+  // const playerDesiredOutcomeMap: Record<
+  // PlayerDesiredOutcome, (o: OpponentMoves) => PlayerMoves > = {
+  //   'X': (o)
+  // }
+
+  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === 'WIN') return [opponent, win(opponent)]
+  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === 'DRAW') return [opponent, draw(opponent)]
+  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === 'LOSE') return [opponent, lose(opponent)]
+  
+  throw Error('nope')
+
+}
+
 function parseLine(line: string): [OpponentMoves, PlayerMoves] {
   const moves = line.split(" ");
   return [moves[0] as OpponentMoves, moves[1] as PlayerMoves];
@@ -80,6 +106,33 @@ function isDraw(opponent: OpponentMoves, player: PlayerMoves): boolean {
   if (opponent === "B" && player === "Y") return true;
   if (opponent === "C" && player === "Z") return true;
   return false;
+}
+
+function draw(opponent: OpponentMoves): PlayerMoves {
+  if (opponent === "A") return "X";
+  if (opponent === "B") return "Y";
+  if (opponent === "C") return "Z";
+
+  // nope
+  throw Error("nope");
+}
+
+function win(opponent: OpponentMoves): PlayerMoves {
+  if (opponent === "A") return "Y";
+  if (opponent === "B") return "Z";
+  if (opponent === "C") return "X";
+
+  // nope
+  throw Error("nope");
+}
+
+function lose(opponent: OpponentMoves): PlayerMoves {
+  if (opponent === "A") return "Z";
+  if (opponent === "B") return "X";
+  if (opponent === "C") return "Y";
+
+  // nope
+  throw Error("nope");
 }
 
 function playerWin(opponent: OpponentMoves, player: PlayerMoves): boolean {
