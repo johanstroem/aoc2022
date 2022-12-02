@@ -1,9 +1,10 @@
 import events from "events";
 import fs from "fs";
 import readline from "readline";
+import { REAL_INPUT } from "../utils";
 
 async function calorieCount() {
-  const elfs = await createCalorieObject("./input.txt");
+  const elfs = await createCalorieObject(REAL_INPUT);
   const sorted: number[] = Object.values(elfs).sort((a, b) => b - a);
 
   const max = sorted[0];
@@ -54,5 +55,4 @@ async function createCalorieObject(filename: string) {
 
 (async function run() {
   await calorieCount();
-})()
-
+})();
