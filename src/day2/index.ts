@@ -1,29 +1,18 @@
 import events from "events";
 import fs from "fs";
-import readline from "readline";
+import readline, { Interface } from "readline";
 import { REAL_INPUT, TEST_INPUT } from "../utils";
 
-async function rockPaperScissor() {
+async function rockPaperScissor(rl: Interface) {
   let score = 0;
 
   try {
-    const rl = readline.createInterface({
-      input: fs.createReadStream(REAL_INPUT),
-      crlfDelay: Infinity,
-    });
-
     rl.on("line", (line) => {
-      const mappedMove = calculateMove(parseLine(line))
+      const mappedMove = calculateMove(parseLine(line));
       score += calculateScore(mappedMove);
     });
 
     await events.once(rl, "close");
-
-    // console.log("Reading file line by line with readline done.");
-    // const used = process.memoryUsage().heapUsed / 1024 / 1024;
-    // console.log(
-    //   `The script uses approximately ${Math.round(used * 100) / 100} MB`
-    // );
   } catch (err) {
     console.error(err);
   }
@@ -88,12 +77,14 @@ function calculateMove([opponent, playerDesiredOutcome]: [
   //   'X': (o)
   // }
 
-  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === 'WIN') return [opponent, win(opponent)]
-  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === 'DRAW') return [opponent, draw(opponent)]
-  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === 'LOSE') return [opponent, lose(opponent)]
-  
-  throw Error('nope')
+  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === "WIN")
+    return [opponent, win(opponent)];
+  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === "DRAW")
+    return [opponent, draw(opponent)];
+  if (PLAYER_DESIRED_OUTCOME[playerDesiredOutcome] === "LOSE")
+    return [opponent, lose(opponent)];
 
+  throw Error("nope");
 }
 
 function parseLine(line: string): [OpponentMoves, PlayerMoves] {
@@ -151,8 +142,12 @@ function playerWin(opponent: OpponentMoves, player: PlayerMoves): boolean {
 }
 
 (async function run() {
-  await rockPaperScissor();
+  const rl = readline.createInterface({
+    input: fs.createReadStream(TEST_INPUT),
+    crlfDelay: Infinity,
+  });
+  await rockPaperScissor(rl);
 })();
 
 // for tests
-export { isDraw, playerWin, calculateScore };
+export { isDraw, playerWin, calculateScore, rockPaperScissor };

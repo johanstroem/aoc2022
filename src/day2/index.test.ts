@@ -1,4 +1,6 @@
-import { calculateScore, isDraw, playerWin } from "./index";
+import readline from "readline";
+import fs from "fs";
+import { calculateScore, isDraw, playerWin, rockPaperScissor } from "./index";
 
 describe("index", () => {
   describe("isDraw", () => {
@@ -60,7 +62,6 @@ describe("index", () => {
     });
   });
 
-
   describe("calculateScore", () => {
     it("should return 8 points for ROCK(A) vs PAPER (Y)", async () => {
       expect.assertions(1);
@@ -79,5 +80,41 @@ describe("index", () => {
       const result = calculateScore(["C", "Z"]);
       expect(result).toBe(6);
     });
+  });
+
+  describe("with test input", () => {
+    let rl: any;
+
+    beforeEach(async () => {
+      rl = readline.createInterface({
+        input: fs.createReadStream("./src/day2/input_test.txt"),
+        crlfDelay: Infinity,
+      });
+    });
+
+    it("should return 12 points", async () => {
+      expect.assertions(1);
+      const result = await rockPaperScissor(rl);
+
+      expect(result).toBe(12);
+    });
+  });
+});
+
+describe("with real input", () => {
+  let rl: any;
+
+  beforeEach(async () => {
+    rl = readline.createInterface({
+      input: fs.createReadStream("./src/day2/input.txt"),
+      crlfDelay: Infinity,
+    });
+  });
+
+  it("should return 10334 points", async () => {
+    expect.assertions(1);
+    const result = await rockPaperScissor(rl);
+
+    expect(result).toBe(10334);
   });
 });
