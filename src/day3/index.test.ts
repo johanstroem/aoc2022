@@ -1,4 +1,4 @@
-import { getCharValue, getPriority, priorityCount } from "./index";
+import { getCharValue, getItemType, getPriority, priorityCount } from "./index";
 import { REAL_INPUT, TEST_INPUT } from "../utils";
 
 describe("index", () => {
@@ -63,17 +63,66 @@ describe("index", () => {
       expect.assertions(1);
       const result = await priorityCount(`./src/day3/input_test.txt`);
 
-      expect(result).toBe(157);
+      //   expect(result).toBe(157);
+      expect(result).toBe(70);
     });
   });
 
   describe("with real input", () => {
-
     it("should return 7766 points", async () => {
       expect.assertions(1);
       const result = await priorityCount(`./src/day3/input.txt`);
 
-      expect(result).toBe(7766);
+      //   expect(result).toBe(7766);
+      expect(result).toBe(2415);
+    });
+  });
+
+  describe("getItemType", () => {
+    it("should return r", () => {
+      expect.assertions(1);
+      const result = getItemType([
+        "vJrwpWtwJgWrhcsFMMfFFhFp",
+        "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+        "PmmdzqPrVvPwwTWBwg",
+      ]);
+      expect(result).toBe("r");
+    });
+    it("should return Z", () => {
+      expect.assertions(1);
+      const result = getItemType([
+        "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+        "ttgJtRGJQctTZtZT",
+        "CrZsJsPPZsGzwwsLwLmpwMDw",
+      ]);
+      expect(result).toBe("Z");
+    });
+    it("should return j", () => {
+      expect.assertions(1);
+      const result = getItemType([
+        "CjhshBJCSrTTsLwqwqwb",
+        "GtmnFHlDfcpHbLZjtTTRLWwb",
+        "fDfNHHjVFNvvrvVBJJdS",
+      ]);
+      expect(result).toBe("j");
+    });
+    it("should return r", () => {
+      expect.assertions(1);
+      const result = getItemType([
+        "qgBqqHzzggBpzSnBNqNSSSgcfhrVlVmwPljQVLVwVvQmmzVl",
+        "rsqsStgNNggBNBZHSrJGdJdCFRRZCFbGbTdJ",
+        "PPWvWQjPhrPQwlMWJJdMDGbJTdCJ",
+      ]);
+      expect(result).toBe("r");
+    });
+    it("should return v", () => {
+      expect.assertions(1);
+      const result = getItemType([
+        "bBBGBfmGvBTnGtGJBtGpcJbZrrddjqrZhDldwdcqrjrjDr",
+        "HWPSQMsPHFsMWPVVMVSHCwDCDwwZZvwjwQZZwjdd",
+        "vVHPgHHFRLfpfJTLLtJL",
+      ]);
+      expect(result).toBe("v");
     });
   });
 });

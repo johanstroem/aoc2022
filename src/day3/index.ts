@@ -1,6 +1,5 @@
-import events from "events";
 import fs from "fs";
-import readline, { Interface } from "readline";
+import readline from "readline";
 import { REAL_INPUT, TEST_INPUT } from "../utils";
 
 function createReadStreamSafe(filename: string, options?: any) {
@@ -30,6 +29,30 @@ async function processLineByLine(
   }
 }
 
+async function processNLines(
+  filename: string,
+  callback: (nLines: string[]) => any,
+  n = 1
+) {
+  const fileStream = await createReadStreamSafe(filename);
+  const rl = readline.createInterface({
+    input: fileStream as any,
+    crlfDelay: Infinity,
+  });
+  let i = 0;
+  const nLines: string[] = [];
+  for await (const line of rl) {
+    nLines.push(line);
+    i++;
+
+    if (i > n - 1) {
+      typeof callback === "function" && callback(nLines);
+      nLines.splice(0, n);
+      i = 0;
+    }
+  }
+}
+
 function getChar(line: string) {
   const middle = Math.floor(line.length / 2);
 
@@ -54,15 +77,26 @@ function getCharValue(char: string) {
   return 0;
 }
 
+function getItemType(lines: string[]) {
+  const [elf1, elf2, elf3] = lines;
+
+  const uniqueItem1 = elf1.split("").filter((c) => elf2.indexOf(c) >= 0);
+  const uniqueItem2 = uniqueItem1.filter((c) => elf3.indexOf(c) >= 0);
+  return uniqueItem2[0];
+}
+
 async function priorityCount(filename = REAL_INPUT) {
   let priorityCount = 0;
 
-  function getPriorityCb(line: string) {
-    priorityCount += getPriority(line);
+  function getPriorityCb(lines: string[]) {
+    // priorityCount += getPriority(line);
+    const char = getItemType(lines);
+
+    priorityCount += getCharValue(char);
   }
 
   try {
-    await processLineByLine(filename, getPriorityCb);
+    await processNLines(filename, getPriorityCb, 3);
   } catch (error) {
     console.error("error", error);
   }
@@ -76,4 +110,4 @@ async function priorityCount(filename = REAL_INPUT) {
 })();
 
 // for tests
-export { getPriority, getCharValue, priorityCount };
+export { getPriority, getCharValue, priorityCount, getItemType };
