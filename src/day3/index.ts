@@ -54,7 +54,7 @@ function getCharValue(char: string) {
   return 0;
 }
 
-async function priorityCount() {
+async function priorityCount(filename = REAL_INPUT) {
   let priorityCount = 0;
 
   function getPriorityCb(line: string) {
@@ -62,12 +62,13 @@ async function priorityCount() {
   }
 
   try {
-    await processLineByLine(REAL_INPUT, getPriorityCb);
+    await processLineByLine(filename, getPriorityCb);
   } catch (error) {
     console.error("error", error);
   }
 
   console.log("priorityCount", priorityCount);
+  return priorityCount;
 }
 
 (async function run() {
@@ -75,4 +76,4 @@ async function priorityCount() {
 })();
 
 // for tests
-export { getPriority, getCharValue };
+export { getPriority, getCharValue, priorityCount };

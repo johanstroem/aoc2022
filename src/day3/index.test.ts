@@ -1,6 +1,5 @@
-import readline from "readline";
-import fs from "fs";
-import { getCharValue, getPriority } from "./index";
+import { getCharValue, getPriority, priorityCount } from "./index";
+import { REAL_INPUT, TEST_INPUT } from "../utils";
 
 describe("index", () => {
   describe("getPriority", () => {
@@ -56,6 +55,25 @@ describe("index", () => {
       expect.assertions(1);
       const result = getCharValue("Z");
       expect(result).toBe(52);
+    });
+  });
+
+  describe("with test input", () => {
+    it("should return 157 points", async () => {
+      expect.assertions(1);
+      const result = await priorityCount(`./src/day3/input_test.txt`);
+
+      expect(result).toBe(157);
+    });
+  });
+
+  describe("with real input", () => {
+
+    it("should return 7766 points", async () => {
+      expect.assertions(1);
+      const result = await priorityCount(`./src/day3/input.txt`);
+
+      expect(result).toBe(7766);
     });
   });
 });
