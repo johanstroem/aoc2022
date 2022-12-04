@@ -99,22 +99,22 @@ describe("index", () => {
       expect(result).toBe(12);
     });
   });
-});
 
-describe("with real input", () => {
-  let rl: any;
+  describe("with real input", () => {
+    let rl: any;
 
-  beforeEach(async () => {
-    rl = readline.createInterface({
-      input: fs.createReadStream("./src/day2/input.txt"),
-      crlfDelay: Infinity,
+    beforeEach(async () => {
+      rl = readline.createInterface({
+        input: fs.createReadStream("./src/day2/input.txt"),
+        crlfDelay: Infinity,
+      });
     });
-  });
 
-  it("should return 10334 points", async () => {
-    expect.assertions(1);
-    const result = await rockPaperScissor(rl);
+    it("should return 10334 points", async () => {
+      expect.assertions(1);
+      const result = await rockPaperScissor(rl);
 
-    expect(result).toBe(10334);
+      expect(result).toBe(10334);
+    });
   });
 });
