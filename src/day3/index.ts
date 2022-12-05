@@ -70,7 +70,7 @@ async function priorityCount(filename = REAL_INPUT) {
   }
 
   try {
-    await processNLines(filename, getPriorityCb, 3);
+    await processNLines({ filename, callback: getPriorityCb, n: 3 });
   } catch (error) {
     console.error("error", error);
   }

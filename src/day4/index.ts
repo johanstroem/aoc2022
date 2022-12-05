@@ -24,7 +24,7 @@ async function countContainedRanges(filename = TEST_INPUT) {
   }
 
   try {
-    await processNLines(filename, callback);
+    await processNLines({ filename, callback });
   } catch (error) {
     console.error("error", error);
   }
@@ -59,7 +59,7 @@ async function countOverlappingRanges(filename = TEST_INPUT) {
   }
 
   try {
-    await processNLines(filename, callback);
+    await processNLines({ filename, callback });
   } catch (error) {
     console.error("error", error);
   }
@@ -80,8 +80,8 @@ function parseRanges(line: string) {
 }
 
 (async function run() {
-    // await countContainedRanges(REAL_INPUT);
-    await countOverlappingRanges(REAL_INPUT);
+  // await countContainedRanges(REAL_INPUT);
+  await countOverlappingRanges(REAL_INPUT);
 })();
 
 function printRange(range: { length: number; min: number; max: number }) {

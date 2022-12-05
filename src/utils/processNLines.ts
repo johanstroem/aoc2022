@@ -1,11 +1,24 @@
 import readline from "readline";
 import createReadStreamSafe from "./createReadStreamSafe";
 
-async function processNLines(
-  filename: string,
-  callback: (nLines: string[] | string) => any,
-  n = 1
-) {
+type Options = {
+  filename: string;
+  callback: (nLines: string[] | string) => any;
+  n?: number;
+  startLine?: number;
+  returnCondition?: (line: string) => boolean;
+};
+
+async function processNLines({
+  filename,
+  callback,
+  n = 1,
+  startLine = 0,
+  returnCondition = undefined,
+}: Options): Promise<void | {
+  result: ReturnType<Options["callback"]>;
+  endLine: number;
+}> {
   const fileStream = await createReadStreamSafe(filename);
   const rl = readline.createInterface({
     input: fileStream as any,
@@ -13,16 +26,32 @@ async function processNLines(
   });
   let i = 0;
   const nLines: string[] = [];
+
   for await (const line of rl) {
-    nLines.push(line);
     i++;
 
+    if (i < startLine) continue;
+
+    if (typeof returnCondition === "function" && returnCondition(line)) {
+      return {
+        result: callback(nLines.length === 1 ? nLines[0] : nLines),
+        endLine: i,
+      };
+    }
+
+    nLines.push(line);
+
+    // replace with modulo operation
     if (i > n - 1) {
-      typeof callback === "function" &&
-        callback(nLines.length === 1 ? nLines[0] : nLines);
+      callback(nLines.length === 1 ? nLines[0] : nLines);
       nLines.splice(0, n);
       i = 0;
     }
+  }
+
+  // run callback on odd lines left?
+  if (i > 0) {
+    typeof callback === "function" && callback(nLines);
   }
 }
 
