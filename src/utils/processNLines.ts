@@ -3,7 +3,7 @@ import createReadStreamSafe from "./createReadStreamSafe";
 
 async function processNLines(
   filename: string,
-  callback: (nLines: string[]) => any,
+  callback: (nLines: string[] | string) => any,
   n = 1
 ) {
   const fileStream = await createReadStreamSafe(filename);
@@ -18,7 +18,8 @@ async function processNLines(
     i++;
 
     if (i > n - 1) {
-      typeof callback === "function" && callback(nLines);
+      typeof callback === "function" &&
+        callback(nLines.length === 1 ? nLines[0] : nLines);
       nLines.splice(0, n);
       i = 0;
     }

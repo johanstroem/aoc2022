@@ -59,7 +59,10 @@ function getItemType(lines: string[]) {
 async function priorityCount(filename = REAL_INPUT) {
   let priorityCount = 0;
 
-  function getPriorityCb(lines: string[]) {
+  function getPriorityCb(lines: string | string[]) {
+    if (typeof lines === "string") {
+      throw new Error("oopsie");
+    }
     // priorityCount += getPriority(line);
     const char = getItemType(lines);
 
