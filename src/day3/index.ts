@@ -1,15 +1,10 @@
-import fs from "fs";
 import readline from "readline";
-import { REAL_INPUT, TEST_INPUT } from "../utils";
-
-function createReadStreamSafe(filename: string, options?: any) {
-  return new Promise((resolve, reject) => {
-    const fileStream = fs.createReadStream(filename, options);
-    fileStream.on("error", reject).on("open", () => {
-      resolve(fileStream);
-    });
-  });
-}
+import {
+  createReadStreamSafe,
+  processNLines,
+  REAL_INPUT,
+  TEST_INPUT,
+} from "../utils";
 
 async function processLineByLine(
   filename: string,
@@ -25,30 +20,6 @@ async function processLineByLine(
   for await (const line of rl) {
     if (typeof callback === "function") {
       callback(line);
-    }
-  }
-}
-
-async function processNLines(
-  filename: string,
-  callback: (nLines: string[]) => any,
-  n = 1
-) {
-  const fileStream = await createReadStreamSafe(filename);
-  const rl = readline.createInterface({
-    input: fileStream as any,
-    crlfDelay: Infinity,
-  });
-  let i = 0;
-  const nLines: string[] = [];
-  for await (const line of rl) {
-    nLines.push(line);
-    i++;
-
-    if (i > n - 1) {
-      typeof callback === "function" && callback(nLines);
-      nLines.splice(0, n);
-      i = 0;
     }
   }
 }
