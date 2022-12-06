@@ -1,41 +1,31 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
 import processNLines from "../utils/processNLines";
 
-function findMarker(line: string | string[]) {
+function findMarker(line: string | string[], markerLength = 4) {
   if (typeof line !== "string") {
     throw new Error("oops");
   }
 
-  console.log("line", Array.from(line));
-  console.log("line.length", Array.from(line).length);
-
   // parse line using Array.reduce
-  const marker = Array.from(line).reduce((prev, curr, index, arr) => {
-    console.log("curr", curr);
-
-    if (prev.length < 4) {
+  const marker = Array.from(line).reduce((prev, curr, _i, arr) => {
+    if (prev.length < markerLength) {
       return prev + curr;
     }
 
-    console.log("next", prev.substring(1) + curr);
     const next = prev.substring(1) + curr;
 
     if (new Set(next).size === next.length) {
       // All chars are unique. i.e. this is the marker
-      console.log("found marker", next);
-      arr.splice(1);
+      arr.splice(1); // ugly break
       return next;
     }
     return next;
   }, "");
 
   console.log("marker", marker);
-
   const index = line.indexOf(marker);
-  console.log("index", index);
-
-  console.log("answer:", index + marker.length)
-
+  
+  console.log("answer:", index + marker.length);
   return index + marker.length;
 }
 
@@ -43,8 +33,7 @@ async function findStartMarkerIndex(filename: string) {
   try {
     await processNLines({
       filename,
-      callback: findMarker,
-      n: 1,
+      callback: (line) => findMarker(line, 14),
     });
 
     return {
@@ -60,6 +49,7 @@ async function getStartMarker(filename = REAL_INPUT) {
 }
 
 (async function run() {
+  if (process.env.NODE_ENV === "test") return;
   await getStartMarker();
 })();
 
