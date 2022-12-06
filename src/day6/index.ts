@@ -1,5 +1,5 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
-import processNLines from "../utils/processNLines";
+import createLineProcessor from "../utils/lineProcessor";
 
 function findMarker(line: string | string[], markerLength = 4) {
   if (typeof line !== "string") {
@@ -24,15 +24,17 @@ function findMarker(line: string | string[], markerLength = 4) {
 
   console.log("marker", marker);
   const index = line.indexOf(marker);
-  
+
   console.log("answer:", index + marker.length);
   return index + marker.length;
 }
 
 async function findStartMarkerIndex(filename: string) {
+  const processor = await createLineProcessor(filename);
+
   try {
-    await processNLines({
-      filename,
+    
+    await processor({
       callback: (line) => findMarker(line, 14),
     });
 

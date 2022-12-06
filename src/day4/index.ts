@@ -1,4 +1,5 @@
-import { processNLines, REAL_INPUT, TEST_INPUT } from "../utils";
+import { REAL_INPUT, TEST_INPUT } from "../utils";
+import createLineProcessor from "../utils/lineProcessor";
 
 async function countContainedRanges(filename = TEST_INPUT) {
   let count = 0;
@@ -23,8 +24,10 @@ async function countContainedRanges(filename = TEST_INPUT) {
     }
   }
 
+  const processor = await createLineProcessor(filename);
+
   try {
-    await processNLines({ filename, callback });
+    await processor({ callback });
   } catch (error) {
     console.error("error", error);
   }
@@ -57,9 +60,10 @@ async function countOverlappingRanges(filename = TEST_INPUT) {
       count += 1;
     }
   }
+  const processor = await createLineProcessor(filename);
 
   try {
-    await processNLines({ filename, callback });
+    await processor({ callback });
   } catch (error) {
     console.error("error", error);
   }

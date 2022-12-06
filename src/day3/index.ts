@@ -1,10 +1,6 @@
 import readline from "readline";
-import {
-  createReadStreamSafe,
-  processNLines,
-  REAL_INPUT,
-  TEST_INPUT,
-} from "../utils";
+import { createReadStreamSafe, REAL_INPUT, TEST_INPUT } from "../utils";
+import createLineProcessor from "../utils/lineProcessor";
 
 async function processLineByLine(
   filename: string,
@@ -69,8 +65,10 @@ async function priorityCount(filename = REAL_INPUT) {
     priorityCount += getCharValue(char);
   }
 
+  const processor = await createLineProcessor(filename);
+
   try {
-    await processNLines({ filename, callback: getPriorityCb, n: 3 });
+    await processor({ callback: getPriorityCb, n: 3 });
   } catch (error) {
     console.error("error", error);
   }

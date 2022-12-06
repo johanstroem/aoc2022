@@ -1,5 +1,5 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
-import processNLines from "../utils/processNLines";
+import createLineProcessor from "../utils/lineProcessor";
 
 function readStateLines(lines: string | string[]) {
   if (typeof lines === "string") {
@@ -10,10 +10,11 @@ function readStateLines(lines: string | string[]) {
 }
 
 async function getInitialState(filename: string) {
+  const processor = await createLineProcessor(filename);
+
   try {
     const { lines, nextLine } =
-      (await processNLines({
-        filename,
+      (await processor({
         callback: readStateLines,
         n: Number.POSITIVE_INFINITY,
         returnCondition: (line) => line === "",
@@ -61,9 +62,10 @@ async function processMoves(
     state = moveBox(state, parseLine(line));
   }
 
+  const processor = await createLineProcessor(filename);
+
   try {
-    await processNLines({
-      filename,
+    await processor({
       callback,
       startLine,
     });
