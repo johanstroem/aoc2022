@@ -95,7 +95,7 @@ function moveBox(
     }
 
     if (i + 1 === to) {
-      return [...arr[from - 1].slice(0, n).reverse(), ...stack];
+      return [...arr[from - 1].slice(0, n), ...stack];
     }
     return stack;
   });

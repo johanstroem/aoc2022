@@ -25,7 +25,8 @@ describe("index", () => {
         from: 2,
         to: 3,
       });
-      expect(result).toEqual([["N", "Z"], [], ["M", "C", "D", "P"]]);
+      // expect(result).toEqual([["N", "Z"], [], ["M", "C", "D", "P"]]);
+      expect(result).toEqual([["N", "Z"], [], ["D", "C", "M", "P"]]);
     });
   });
 
