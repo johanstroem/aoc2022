@@ -16,7 +16,7 @@ async function processNLines({
   startLine = 0,
   returnCondition = undefined,
 }: Options): Promise<void | {
-  result: ReturnType<Options["callback"]>;
+  lines: ReturnType<Options["callback"]>;
   endLine: number;
 }> {
   const fileStream = await createReadStreamSafe(filename);
@@ -34,7 +34,7 @@ async function processNLines({
 
     if (typeof returnCondition === "function" && returnCondition(line)) {
       return {
-        result: callback(nLines.length === 1 ? nLines[0] : nLines),
+        lines: callback(nLines.length === 1 ? nLines[0] : nLines),
         endLine: i,
       };
     }
@@ -45,12 +45,12 @@ async function processNLines({
     if (i > n - 1) {
       callback(nLines.length === 1 ? nLines[0] : nLines);
       nLines.splice(0, n);
-      i = 0;
+      i = startLine;
     }
   }
 
   // run callback on odd lines left?
-  if (i > 0) {
+  if (nLines.length > 0) {
     typeof callback === "function" && callback(nLines);
   }
 }
