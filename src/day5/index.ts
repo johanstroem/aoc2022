@@ -1,26 +1,27 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
 import processNLines from "../utils/processNLines";
 
-async function getInitialState(filename: string) {
-  function callback(lines: string | string[]) {
-    if (typeof lines === "string") {
-      throw new Error("oops");
-    }
-
-    return lines;
+function readStateLines(lines: string | string[]) {
+  if (typeof lines === "string") {
+    throw new Error("oops");
   }
 
+  return lines;
+}
+
+async function getInitialState(filename: string) {
   try {
-    const result = await processNLines({
-      filename,
-      callback,
-      n: Number.POSITIVE_INFINITY,
-      returnCondition: (line) => line === "",
-    });
+    const { lines, nextLine } =
+      (await processNLines({
+        filename,
+        callback: readStateLines,
+        n: Number.POSITIVE_INFINITY,
+        returnCondition: (line) => line === "",
+      })) || {};
 
     return {
-      initialState: parseInitialState(result!.lines),
-      endLine: result!.endLine,
+      initialState: parseInitialState(lines),
+      nextLine,
     };
   } catch (error) {
     console.error("error", error);
@@ -104,13 +105,15 @@ function moveBox(
 }
 
 async function moveBoxes(filename = REAL_INPUT) {
-  const { initialState, endLine = 0 } = (await getInitialState(filename)) || {};
+  const { initialState, nextLine = 0 } =
+    (await getInitialState(filename)) || {};
 
   if (!initialState) {
     throw new Error("Oops, cannot read initial state");
   }
 
-  const { state } = await processMoves(filename, initialState, endLine + 1) || {};
+  const { state } =
+    (await processMoves(filename, initialState, nextLine)) || {};
 
   if (!state) {
     throw new Error("Oops, error processing moves");

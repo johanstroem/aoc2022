@@ -1,3 +1,4 @@
+import events from "events";
 import readline from "readline";
 import createReadStreamSafe from "./createReadStreamSafe";
 
@@ -15,9 +16,9 @@ async function processNLines({
   n = 1,
   startLine = 0,
   returnCondition = undefined,
-}: Options): Promise<void | {
+}: Options): Promise<null | {
   lines: ReturnType<Options["callback"]>;
-  endLine: number;
+  nextLine: number;
 }> {
   const fileStream = await createReadStreamSafe(filename);
   const rl = readline.createInterface({
@@ -35,7 +36,7 @@ async function processNLines({
     if (typeof returnCondition === "function" && returnCondition(line)) {
       return {
         lines: callback(nLines.length === 1 ? nLines[0] : nLines),
-        endLine: i,
+        nextLine: i + 1,
       };
     }
 
@@ -49,10 +50,14 @@ async function processNLines({
     }
   }
 
-  // run callback on odd lines left?
+  // const closed = await events.once(rl, "close");
+  // console.log('closed', closed);
+
   if (nLines.length > 0) {
-    typeof callback === "function" && callback(nLines);
+    // throw if nLines contains unprocessed lines
+    new Error("processNLines did now process all lines");
   }
+  return null;
 }
 
 export default processNLines;

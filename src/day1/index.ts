@@ -3,8 +3,8 @@ import fs from "fs";
 import readline from "readline";
 import { REAL_INPUT } from "../utils";
 
-async function calorieCount() {
-  const elfs = await createCalorieObject(REAL_INPUT);
+async function calorieCount(filename = REAL_INPUT) {
+  const elfs = await createCalorieObject(filename);
   const sorted: number[] = Object.values(elfs).sort((a, b) => b - a);
 
   const max = sorted[0];
@@ -15,6 +15,7 @@ async function calorieCount() {
     .reduce((tot: number, val: number) => (tot += val), 0);
   // Combined calorie count of the top 3 elves
   console.log(top3);
+  return [max, top3];
 }
 
 async function createCalorieObject(filename: string) {
@@ -54,5 +55,9 @@ async function createCalorieObject(filename: string) {
 }
 
 (async function run() {
+  if (process.env.NODE_ENV === "test") return;
   await calorieCount();
 })();
+
+// for tests
+export { calorieCount };
