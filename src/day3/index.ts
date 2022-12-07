@@ -68,7 +68,7 @@ async function priorityCount(filename = REAL_INPUT) {
   const processor = await createLineProcessor(filename);
 
   try {
-    await processor({ callback: getPriorityCb, n: 3 });
+    await processor({ callback: getPriorityCb, readNoLines: 3 });
   } catch (error) {
     console.error("error", error);
   }

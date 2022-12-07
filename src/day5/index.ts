@@ -16,7 +16,7 @@ async function getInitialState(filename: string) {
     const { lines, nextLine } =
       (await processor({
         callback: readStateLines,
-        n: Number.POSITIVE_INFINITY,
+        readNoLines: Number.POSITIVE_INFINITY,
         returnCondition: (line) => line === "",
       })) || {};
 
@@ -130,6 +130,8 @@ async function moveBoxes(filename = REAL_INPUT) {
 }
 
 (async function run() {
+  if (process.env.NODE_ENV === "test") return;
+
   await moveBoxes();
 })();
 

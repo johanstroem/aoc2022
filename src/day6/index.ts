@@ -33,14 +33,9 @@ async function findStartMarkerIndex(filename: string) {
   const processor = await createLineProcessor(filename);
 
   try {
-    
     await processor({
       callback: (line) => findMarker(line, 14),
     });
-
-    return {
-      initialState: [],
-    };
   } catch (error) {
     console.error("error", error);
   }

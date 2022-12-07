@@ -22,7 +22,7 @@ async function createLineProcessor(filename: string): Promise<LineProcessor> {
 
 type Options = {
   callback: (nLines: string[] | string) => any;
-  n?: number;
+  readNoLines?: number;
   startLine?: number;
   returnCondition?: (line: string) => boolean;
   rl: Interface;
@@ -31,42 +31,44 @@ type Options = {
 async function processNLines({
   callback,
   rl,
-  n = 1,
+  readNoLines = 1,
   startLine = 0,
   returnCondition = undefined,
 }: Options): Promise<null | {
   lines: ReturnType<Options["callback"]>;
   nextLine: number;
 }> {
-  let i = 0;
-  const nLines: string[] = [];
+  let lineNo = 0;
+  let counter = 0;
+  const lines: string[] = [];
 
   for await (const line of rl) {
-    i++;
+    lineNo++;
+    counter++;
 
-    if (i < startLine) continue;
+    if (counter < startLine) continue;
 
     if (typeof returnCondition === "function" && returnCondition(line)) {
       return {
-        lines: callback(nLines.length === 1 ? nLines[0] : nLines),
-        nextLine: i + 1,
+        lines: callback(lines.length === 1 ? lines[0] : lines),
+        nextLine: counter + 1,
       };
     }
 
-    nLines.push(line);
+    lines.push(line);
 
     // replace with modulo operation
-    if (i > n - 1) {
-      callback(nLines.length === 1 ? nLines[0] : nLines);
-      nLines.splice(0, n);
-      i = startLine;
+    if (counter > readNoLines - 1) {
+      callback(lines.length === 1 ? lines[0] : lines);
+      lines.splice(0, readNoLines);
+      counter = startLine;
     }
   }
 
   // const closed = await events.once(rl, "close");
   // console.log('closed', closed);
 
-  if (nLines.length > 0) {
+  if (lines.length > 0) {
     // throw if nLines contains unprocessed lines
     new Error("processNLines did now process all lines");
   }
