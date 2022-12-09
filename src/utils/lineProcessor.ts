@@ -21,7 +21,7 @@ async function createLineProcessor(filename: string): Promise<LineProcessor> {
 }
 
 type Options = {
-  callback: (nLines: string[] | string) => any;
+  callback: (lines: string[] | string) => any;
   readNoLines?: number;
   startLine?: number;
   returnCondition?: (line: string) => boolean;
@@ -65,11 +65,8 @@ async function processNLines({
     }
   }
 
-  // const closed = await events.once(rl, "close");
-  // console.log('closed', closed);
-
   if (lines.length > 0) {
-    // throw if nLines contains unprocessed lines
+    // throw if lines contains unprocessed lines
     new Error("processNLines did now process all lines");
   }
   return null;
