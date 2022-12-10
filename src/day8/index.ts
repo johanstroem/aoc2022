@@ -10,9 +10,10 @@ async function countVisibleTrees(filename = REAL_INPUT) {
     .flat(1)
     .filter(({ visibility }) => visibility === VISIBLE).length;
   console.log("visibleCount", visibleCount);
-  const maxScenicScore = Math.max(...visibility.flatMap((val) => val.map(t => t.scenicScore)))
+  const maxScenicScore = Math.max(
+    ...visibility.flatMap((val) => val.map((t) => t.scenicScore))
+  );
   console.log("maxScenicScore", maxScenicScore);
-
 }
 
 async function createTreeMap(filename: string): Promise<number[][]> {
@@ -23,8 +24,7 @@ async function createTreeMap(filename: string): Promise<number[][]> {
     if (typeof line !== "string") {
       throw new Error("oops");
     }
-    let row = line.split("").map((n) => Number(n));
-    map.push(row);
+    map.push(line.split("").map((n) => Number(n)));
   }
 
   try {
@@ -33,7 +33,7 @@ async function createTreeMap(filename: string): Promise<number[][]> {
     });
     return map;
   } catch (error) {
-    // console.error("error", error);
+    console.error("error", error);
   }
   return [];
 }
@@ -43,8 +43,6 @@ type Hidden = typeof HIDDEN;
 const VISIBLE = "V";
 type Visible = typeof VISIBLE;
 
-// type Range = Tree['height']
-
 type Tree = {
   height: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   visibility: Hidden | Visible;
@@ -52,12 +50,6 @@ type Tree = {
 };
 
 function setVisibility(map: number[][]): Tree[][] {
-  //   let rows = map.length;
-  //   let columns = map[0].length;
-
-  //   console.log("rows", rows);
-  //   console.log("columns", columns);
-
   let visibility = map.map((row, i, arr) => {
     // console.log(`row[${i}]`, row);
     if (i === 0 || i === arr.length - 1) {
@@ -75,7 +67,7 @@ function setVisibility(map: number[][]): Tree[][] {
           scenicScore: 0,
         };
       }
-    //   console.log(`tree[${i}][${j}]`, tree);
+      //   console.log(`tree[${i}][${j}]`, tree);
 
       const [visibility, scenicScore] = checkVisibility({
         tree: tree as Tree["height"],
@@ -83,8 +75,6 @@ function setVisibility(map: number[][]): Tree[][] {
         row,
         column: map.map((row) => row[j]),
       });
-    //   console.log("visibility", visibility);
-
       return {
         height: tree,
         visibility,
@@ -92,8 +82,6 @@ function setVisibility(map: number[][]): Tree[][] {
       };
     });
   });
-
-//   console.log("visibility", visibility);
 
   return visibility as Tree[][];
 }
@@ -109,28 +97,16 @@ function checkVisibility({
   row: number[];
   column: number[];
 }) {
-//   console.log("tree", tree);
-
   const [i, j] = position;
   const top = column.slice(0, i);
   const bottom = column.slice(i + 1);
-//   console.log("top", top);
-//   console.log("bottom", bottom);
-
   const left = row.slice(0, j);
   const right = row.slice(j + 1);
-//   console.log("left", left);
-//   console.log("right", right);
 
   const topIndex = top.reverse().findIndex((height) => height >= tree);
   const bottomIndex = bottom.findIndex((height) => height >= tree);
   const leftIndex = left.reverse().findIndex((height) => height >= tree);
   const rightIndex = right.findIndex((height) => height >= tree);
-
-//   console.log("top", topIndex);
-//   console.log("bottom", bottomIndex);
-//   console.log("left", leftIndex);
-//   console.log("right", rightIndex);
 
   const scenicScore =
     (topIndex >= 0 ? topIndex + 1 : top.length) *
@@ -139,10 +115,7 @@ function checkVisibility({
     (rightIndex >= 0 ? rightIndex + 1 : right.length);
 
   const visibility =
-    top.some((height) => height >= tree) &&
-    bottom.some((height) => height >= tree) &&
-    left.some((height) => height >= tree) &&
-    right.some((height) => height >= tree)
+    topIndex >= 0 && bottomIndex >= 0 && leftIndex >= 0 && rightIndex >= 0
       ? HIDDEN
       : VISIBLE;
   return [visibility, scenicScore];
