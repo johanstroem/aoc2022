@@ -1,9 +1,12 @@
 import events from "events";
 import fs from "fs";
 import readline from "readline";
-import { REAL_INPUT } from "../utils";
+import { createLineProcessor, REAL_INPUT } from "../utils";
 
 async function calorieCount(filename = REAL_INPUT) {
+
+  const processor = await createLineProcessor(filename)
+  
   const elfs = await createCalorieObject(filename);
   const sorted: number[] = Object.values(elfs).sort((a, b) => b - a);
 
