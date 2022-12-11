@@ -24,7 +24,7 @@ describe("index", () => {
       ]);
     });
   });
-  describe.only("handleMoves", () => {
+  describe("handleMoves", () => {
     it("should return number of visited positions for tail with test_input", () => {
       expect.assertions(1);
       const moves = [
