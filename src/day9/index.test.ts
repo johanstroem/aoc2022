@@ -24,7 +24,7 @@ describe("index", () => {
       ]);
     });
   });
-  describe("handleMoves", () => {
+  describe.only("handleMoves", () => {
     it("should return number of visited positions for tail with test_input", () => {
       expect.assertions(1);
       const moves = [
@@ -36,10 +36,25 @@ describe("index", () => {
         ["D", 1],
         ["L", 5],
         ["R", 2],
-      ] as any;
+      ] as any[];
       const res = handleMoves(moves);
       expect(res).toBe(13);
     });
+    it("should return number of visited positions for tail with test_input for part 2", () => {
+        expect.assertions(1);
+        const moves = [
+          ["R", 5],
+          ["U", 8],
+          ["L", 8],
+          ["D", 3],
+          ["R", 17],
+          ["D", 10],
+          ["L", 25],
+          ["U", 20],
+        ] as any[];
+        const res = handleMoves(moves, 9);
+        expect(res).toBe(36);
+      });
     it.skip("should return visited positions for tail with test_input", async () => {
       expect.assertions(1);
 

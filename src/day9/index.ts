@@ -4,7 +4,7 @@ import createLineProcessor from "../utils/lineProcessor";
 async function countTailVisited(filename = REAL_INPUT) {
   const moves = await readInput(filename);
 
-  return handleMoves(moves);
+  return handleMoves(moves, 9);
 }
 
 async function readInput(
@@ -36,22 +36,56 @@ const position = <T extends number[]>(xs: readonly [...T]): T => xs as T;
 type Position = ReturnType<typeof position<[row: number, col: number]>>;
 const START_POSITION: Position = position([0, 0]);
 
-function handleMoves(moves: Awaited<ReturnType<typeof readInput>>) {
+function handleMoves(
+  moves: Awaited<ReturnType<typeof readInput>>,
+  tailLength = 1
+) {
+  console.log("tailLength", tailLength);
+
   let headPosition = START_POSITION;
-  let tailPosition = START_POSITION;
-  //   let headVisited = []
-  let tailVisited: Position[] = [tailPosition];
+  //   let tailPosition = START_POSITION;
+  let tail: Position[] = Array(tailLength).fill(START_POSITION);
+  const tailTailIndex = tail.length - 1;
+  console.log("tail", tail);
+
+  //   let headVisited = [];
+  let tailVisited: Position[] = [tail[tailTailIndex]];
   moves.forEach(([direction, n]) => {
     // console.log(`direction: ${direction}`);
     for (let i = 0; i < n; i++) {
       //   console.log(`i=${i}`);
       headPosition = moveHead(headPosition, direction);
       //   console.log("headPosition", headPosition);
-      if (shouldTailMove(tailPosition, headPosition)) {
-        // console.log("TAIL SHOULD MOVE");
-        tailPosition = moveTail(tailPosition, headPosition);
-        tailVisited.push(tailPosition);
-      }
+      tail = tail
+        .reduce(
+          (acc, pos, j) => {
+            // console.log(`acc[${j}]: ${acc[j]}, pos=${pos}`);
+
+            if (shouldMove(pos, acc[j])) {
+              // console.log(`Tail should move. j[${j}]`);
+              const nextPos = moveTail(pos, acc[j]);
+              if (j === tailTailIndex) {
+                tailVisited.push(nextPos);
+              }
+              return [...acc, nextPos];
+            } else {
+              return [...acc, pos];
+            }
+          },
+          [headPosition]
+        )
+        .slice(1);
+
+      // console.log("head", headPosition);
+      // console.log("tail", tail);
+      // console.log("visited", tailVisited);
+
+      //   if (shouldMove(tail[tailTailIndex], headPosition)) {
+      //     // console.log("TAIL SHOULD MOVE");
+      //     // tailPosition = moveTail(tailPosition, headPosition);
+      //     tail = tail.map((pos) => moveTail(pos, headPosition));
+      //     tailVisited.push(tail[tailTailIndex]);
+      //   }
     }
   });
   console.log("visited", tailVisited);
@@ -60,6 +94,7 @@ function handleMoves(moves: Awaited<ReturnType<typeof readInput>>) {
   console.log("set", set);
   console.log("set", set.size);
 
+  //   return tailVisited;
   return set.size;
 }
 
@@ -86,7 +121,7 @@ function moveHead([row, col]: Position, direction: Direction): Position {
   }
 }
 
-function shouldTailMove([tRow, tCol]: Position, [hRow, hCol]: Position) {
+function shouldMove([tRow, tCol]: Position, [hRow, hCol]: Position) {
   const deltaRow = hRow - tRow;
   const deltaCol = hCol - tCol;
   //   console.log("deltaRow", deltaRow < 0 ? deltaRow * -1 : deltaRow);
@@ -121,4 +156,10 @@ function moveTail([tRow, tCol]: Position, [hRow, hCol]: Position): Position {
 })();
 
 // for tests
-export { readInput, handleMoves, moveHead, shouldTailMove, moveTail };
+export {
+  readInput,
+  handleMoves,
+  moveHead,
+  shouldMove as shouldTailMove,
+  moveTail,
+};
