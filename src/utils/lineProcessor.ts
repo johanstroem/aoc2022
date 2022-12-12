@@ -66,8 +66,9 @@ async function processNLines({
   }
 
   if (lines.length > 0) {
-    // throw if lines contains unprocessed lines
-    new Error("processNLines did now process all lines");
+    // throw or return if lines contains unprocessed lines?
+    callback(lines.length === 1 ? lines[0] : lines);
+    // throw new Error("processNLines did now process all lines");
   }
   return null;
 }
