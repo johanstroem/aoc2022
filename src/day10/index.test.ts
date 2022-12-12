@@ -1,5 +1,5 @@
 import readInput from "../utils/simpleInputReader";
-import { parseInstruction, readInstructions } from "./index";
+import { parseInstruction, execute } from "./index";
 
 describe("index", () => {
   describe("readInput", () => {
@@ -25,7 +25,7 @@ describe("index", () => {
     });
   });
 
-  describe("readInstructions", () => {
+  describe("execute", () => {
     it("should read instructions and calculate registerX value", () => {
       expect.assertions(1);
 
@@ -41,9 +41,7 @@ describe("index", () => {
         ["addx", 4],
         ["noop"],
       ];
-      const res = readInstructions(instructions);
-      console.log("res", res);
-
+      const res = execute(instructions);
       expect(res).toEqual([
         1, 16, 16, 5, 5, 11, 11, 8, 8, 13, 13, 12, 12, 4, 4, 17, 17, 21, 21,
       ]);

@@ -1,22 +1,16 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
 import readInput from "../utils/simpleInputReader";
 
+const CANVAS = Array(6 * 40).fill(" ");
+
 async function measureSignalStrength(filename = REAL_INPUT) {
   const instructions = await readInput<ReturnType<typeof parseInstruction>>(
     filename,
     parseInstruction
   );
 
-  const res = readInstructions(instructions);
+  const res = execute(instructions, drawCrt(CANVAS));
   // console.log("res", res);
-  // console.log(`signalStrength cycle during 20 = ${20 * res[20 - 2]}`);
-  // console.log(`res[217-2] = ${res[217 - 2]}`);
-  // console.log(`res[218-2] = ${res[218 - 2]}`);
-  // console.log(`res[219-2] = ${res[219 - 2]}`);
-  // console.log(`res[220-2] = ${res[220 - 2]}`);
-  // console.log(`res[221-2] = ${res[221 - 2]}`);
-  // console.log(`res[222-2] = ${res[222 - 2]}`);
-  // console.log(`signalStrength cycle during 220 = ${220 * res[220 - 2]}`);
 
   let sum = 0;
   for (let i = 20; i < res.length - 1; i += 40) {
@@ -37,21 +31,23 @@ function parseInstruction(
     : [instruction as Instruction];
 }
 
-function readInstructions(instructions: ReturnType<typeof parseInstruction>[]) {
+function execute(
+  instructions: ReturnType<typeof parseInstruction>[],
+  draw?: (cycle: number, registerX: number) => void
+) {
   let cycle = 0;
   let registerX = 1;
   let arr = [...instructions];
   const result = [];
   while (++cycle) {
-    // console.log("cycle", cycle);
+    if (typeof draw === "function") draw(cycle, registerX);
     const [i, v] = arr.shift() || [];
 
-    // console.log(`instruction = ${i}`);
     if (i === "addx") {
       result.push(registerX);
-      registerX += v || 0;
-      // console.log(`value = ${v}, registerX = ${registerX}`);
       ++cycle;
+      if (typeof draw === "function") draw(cycle, registerX);
+      registerX += v || 0;
       result.push(registerX);
     } else if (i === "noop") {
       result.push(registerX);
@@ -63,6 +59,22 @@ function readInstructions(instructions: ReturnType<typeof parseInstruction>[]) {
   return result;
 }
 
+function drawCrt(canvas: string[]) {
+  return (cycle: number, registerX: number) => {
+    const sprite = [registerX - 1, registerX, registerX + 1];
+    if (sprite.includes((cycle - 1) % 40)) {
+      canvas[cycle - 1] = "#";
+    } else {
+      canvas[cycle - 1] = ".";
+    }
+
+    for (let i = 0; i < canvas.filter((p) => Boolean(p)).length -1; i += 40) {
+      console.log(canvas.slice(i, i + 40).join(""));
+    }
+    console.log("\n");
+  };
+}
+
 (async function run() {
   if (process.env.NODE_ENV === "test") return;
 
@@ -70,4 +82,4 @@ function readInstructions(instructions: ReturnType<typeof parseInstruction>[]) {
 })();
 
 // for tests
-export { parseInstruction, readInstructions };
+export { parseInstruction, execute };
