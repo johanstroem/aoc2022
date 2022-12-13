@@ -2,6 +2,7 @@ import { REAL_INPUT, TEST_INPUT } from "./globals";
 import createReadStreamSafe from "./createReadStreamSafe";
 import createLineProcessor from "./lineProcessor";
 import simpleInputReader from "./simpleInputReader";
+import getCharValue from "./getCharValue";
 
 export {
   REAL_INPUT,
@@ -9,4 +10,5 @@ export {
   createReadStreamSafe,
   createLineProcessor,
   simpleInputReader,
+  getCharValue
 };
