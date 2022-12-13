@@ -2,16 +2,16 @@ import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
 import createLineProcessor from "../utils/lineProcessor";
 
 const NUMBER_OF_MONKEYS = 8;
-const NUMBER_OF_ROUNDS = 20;
+const NUMBER_OF_ROUNDS = 10000;
 
 async function calculateMonkeyBusiness(filename = REAL_INPUT) {
   const monkeys = await parseMonkeys(filename);
-  console.log("monkeys", monkeys);
+  //   console.log("monkeys", monkeys);
 
-  const inspectionsSorted = monkeys
-    .map((m) => m.inspections)
-    .sort((a, b) => b - a);
-  console.log("inspections", inspectionsSorted);
+  const inspections = monkeys.map((m) => m.inspections);
+//   console.log("inspections", inspections);
+  const inspectionsSorted = inspections.sort((a, b) => b - a);
+  console.log("inspectionsSorted", inspectionsSorted);
   const monkeyBusiness = inspectionsSorted[0] * inspectionsSorted[1];
   console.log("monkeyBusiness", monkeyBusiness);
 }
@@ -20,6 +20,7 @@ type Monkey = {
   items: number[];
   operation: (worry: number) => number;
   test: (worry: number) => number;
+  divisor: number;
   inspections: number;
 };
 
@@ -50,6 +51,7 @@ async function parseMonkeys(filename: string) {
       test: (worry) => {
         return worry % test == 0 ? whenTrue : whenFalse;
       },
+      divisor: test,
       inspections: 0,
     };
 
@@ -66,11 +68,20 @@ async function parseMonkeys(filename: string) {
       });
     }
 
+    const worryReducer = (worry: number) => {
+      const lcd = monkeys.reduce((acc, m) => {
+        return acc * m.divisor;
+      }, 1);
+
+      return worry % lcd;
+    };
+
     for (let i = 0; i < NUMBER_OF_ROUNDS * monkeys.length; i++) {
       monkeys = doTurn(
         monkeys[i % monkeys.length],
         i % monkeys.length,
-        monkeys
+        monkeys,
+        worryReducer
       );
     }
   } catch (error) {
@@ -80,26 +91,28 @@ async function parseMonkeys(filename: string) {
   return monkeys;
 }
 
-function doTurn(monkey: Monkey, i: number, arr: Monkey[]): Monkey[] {
+function doTurn(
+  monkey: Monkey,
+  i: number,
+  arr: Monkey[],
+  //   testFn: (worry: number) => number
+  worryReducer: (number: number) => number
+): Monkey[] {
   const copy = arr.map((m) => ({
     ...m,
   }));
-  monkey.items.forEach((item, j) => {
+  monkey.items.forEach((item) => {
     let worry = monkey.operation(item);
-    worry = Math.floor(worry / 3);
-    // console.log(`worry: ${worry}`);
+    worry = worryReducer(worry);
     const throwTo = monkey.test(worry);
-    // console.log(`throwTo: ${throwTo}`);
     copy[throwTo].items.push(worry);
   });
 
-  copy[i].items = [];
-  copy[i].inspections += monkey.items.length;
-
-  //   console.log(`copy[${i}]`, copy[i]);
-  //   console.log("monkey", monkey);
-  //   console.log(`#inspections: `);
-  //   console.log("copy", copy);
+  copy[i] = {
+    ...copy[i],
+    items: [],
+    inspections: copy[i].inspections + monkey.items.length,
+  };
   return copy;
 }
 
