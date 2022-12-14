@@ -13,15 +13,15 @@ const END = "E" as const;
 const VISITED = "o" as const;
 
 type Height = number;
-type Position = Height | typeof VISITED | typeof END;
+type Position = Height | typeof VISITED | typeof END | typeof START;
 
 type Map = Position[][];
 
 const SEARCH_DEPTH = 100;
 
 // REAL INPUT END = [20, 112]?
-const END_ROW = 2;
-const END_COL = 5;
+// const END_ROW = 2;
+// const END_COL = 5;
 
 // TEST INPUt [2, 5]
 
@@ -29,7 +29,7 @@ async function getShortestPath(filename = TEST_INPUT) {
   const map: Map = (await createMap(filename)).map((row) =>
     row.map(
       // DO NOT CHANGE END TO VALUE?
-      (node) => (node === START ? 1 : node === END ? 26 : getCharValue(node))
+      (node) => (node === START ? "S" : node === END ? "E" : getCharValue(node))
       // ({
       //   char: node,
       //   height: node === START ? 1 : node === END ? 26 : getCharValue(node),
@@ -41,12 +41,12 @@ async function getShortestPath(filename = TEST_INPUT) {
   //   printMap(map, END_ROW+1, END_COL+1)
 
   console.log(`map size: rows ${map.length} X cols ${map[0].length}`);
-  console.log("map[END_ROW][END_COL]", map[END_ROW][END_COL]);
+  //   console.log("map[END_ROW][END_COL]", map[END_ROW][END_COL]);
 
-  map[END_ROW][END_COL] = END;
+  //   map[END_ROW][END_COL] = END;
   console.log("START!");
 
-  //   printMap(map);
+  printMap(map);
 
   //   const startIndex = getStartIndex(map)
   // first node should be start position
@@ -75,13 +75,13 @@ async function getShortestPath(filename = TEST_INPUT) {
       //   console.log("=====", j, "======");
       //   printMap(p, 10, 50);
 
-      return p[END_ROW][END_COL] === VISITED;
+      return p[2][5] === VISITED;
     });
 
-    completePaths.forEach((p, j) => {
-      //   console.log("j", j);
-      //   printMap(p, 10, 50);
-    });
+    // completePaths.forEach((p, j) => {
+    //   console.log("j", j);
+    //   printMap(p, 10, 50);
+    // });
     console.log("paths.length", paths.length);
     console.log("completePaths.length", completePaths.length);
 
@@ -143,7 +143,7 @@ function getPaths(
   depth: number,
   searchDepth: number
 ): Map[] {
-  //   console.log(`depth: ${depth}, searchDepth: ${searchDepth}`);
+  // console.log(`depth: ${depth}, searchDepth: ${searchDepth}`);
 
   //   const copy = map.map((n) => ({
   //     ...n,
@@ -157,7 +157,7 @@ function getPaths(
     let nextMap: Position[][] = map.map((row) => [...row]);
     nextMap[nRow][nCol] = VISITED;
 
-    printMap(nextMap, 10, 50);
+    printMap(nextMap, 10, 90);
 
     return [nextMap];
   }
@@ -177,20 +177,20 @@ function getPaths(
     })
     .filter(([row, col]) => {
       return canVisit(node as number, map[row][col]);
-    })
-    .sort(([aRow, aCol], [bRow, bCol]) => {
-      //   console.log(`b: ${map[bRow][bCol]}, a: ${map[aRow][aCol]}`);
-      return (map[bRow][bCol] as number) - (map[aRow][aCol] as number);
     });
+  // .sort(([aRow, aCol], [bRow, bCol]) => {
+  //   //   console.log(`b: ${map[bRow][bCol]}, a: ${map[aRow][aCol]}`);
+  //   return (map[bRow][bCol] as number) - (map[aRow][aCol] as number);
+  // });
   // .slice(0, 2)
   // .sort((_a, _b) => 0.5 - Math.random());
 
-  //   console.log("opts", options);
+  console.log("opts", options);
 
   //   Dead end?
   if (options.length === 0) {
     console.log(`DEAD END: map[${nRow}][${nCol}]=${node}`);
-    printMap(map, 10, 50);
+    printMap(map, 10, 90);
     return [map];
   } else {
     // flatMap?
@@ -227,10 +227,12 @@ function isOutside([row, col]: Index, map: Map) {
   return row < 0 || col < 0 || row > map.length - 1 || col > map[0].length - 1;
 }
 
-function canVisit(node: number, neighbor: Position) {
+function canVisit(node: number | typeof START, neighbor: Position) {
   // check index or height or visited
   if (neighbor === VISITED) {
     return false;
+  } else if (node === START) {
+    return neighbor <= 2;
   } else if (neighbor === END) {
     return getCharValue("z") <= node + 1;
   } else {
