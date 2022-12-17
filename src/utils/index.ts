@@ -3,6 +3,7 @@ import createReadStreamSafe from "./createReadStreamSafe";
 import createLineProcessor from "./lineProcessor";
 import simpleInputReader from "./simpleInputReader";
 import getCharValue from "./getCharValue";
+import printMap, { Map } from "./printMap";
 
 export {
   REAL_INPUT,
@@ -10,5 +11,7 @@ export {
   createReadStreamSafe,
   createLineProcessor,
   simpleInputReader,
-  getCharValue
+  getCharValue,
+  printMap,
+  Map
 };
