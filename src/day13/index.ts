@@ -1,12 +1,16 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
 import createLineProcessor from "../utils/lineProcessor";
 
+type Packet = String;
+
+type Pair = [left: Packet, right: Packet];
+
 async function sumOrderedIndices(filename = REAL_INPUT) {
   const processor = await createLineProcessor(filename);
   let endOfFile = false;
   const READ_NO_LINES = 3;
 
-  const input: any[] = [];
+  const input: Pair[] = [];
 
   function callback(lines: string | string[]) {
     if (typeof lines === "string") {
@@ -14,18 +18,12 @@ async function sumOrderedIndices(filename = REAL_INPUT) {
     }
 
     if (lines.length !== READ_NO_LINES) {
-      //   console.log("EOF?", lines);
+      console.log("EOF?", lines);
       endOfFile = true;
-      // throw new Error(`Oops, end of file?`);
     }
 
-    const left = lines[0];
-    const right = lines[1];
-    // console.log("left", left);
-    // console.log("right", right);
-
     // calculate if ordered here and just add index?
-    input.push([left, right]);
+    input.push([JSON.parse(lines[0]), JSON.parse(lines[1])]);
   }
 
   try {
@@ -36,32 +34,30 @@ async function sumOrderedIndices(filename = REAL_INPUT) {
       });
     }
 
-    const compared = input
+    const orderedIndices = input
       .map(([left, right], i) => {
-        // console.log(" leftParsed", JSON.parse(left));
-        // console.log("rightParsed", JSON.parse(right));
-
-        let res = compare(JSON.parse(left), JSON.parse(right));
-        // console.log("res", res);
-
-        //   return compare(l, r);
-        return res < 0 ? i + 1 : -1;
+        return compare(left, right) < 0 ? i + 1 : -1;
       })
       .filter((index) => {
-        // console.log("index", index);
         return index > 0;
       });
 
-    console.log("compared.length", compared.length);
-    // for (const i of compared) {
-    //   console.log(`i: ${i}`);
-    // }
-
-    const sum = compared.reduce((acc, curr) => {
+    const sum = orderedIndices.reduce((acc, curr) => {
       return acc + curr;
     }, 0);
 
     console.log("sum", sum);
+
+    const [divider1, divider2] = [[[2]], [[6]]];
+
+    console.log("input flat.length", [...input.flat()].length);
+    console.log([...input.flat()]);
+    const ordered = [divider1, divider2, ...input.flat()].sort(compare);
+
+    const d1 = ordered.indexOf(divider1) + 1;
+    const d2 = ordered.indexOf(divider2) + 1;
+
+    console.log("decoderKey", d1 * d2);
   } catch (error) {
     console.error("error", error);
     endOfFile = true;
@@ -69,8 +65,8 @@ async function sumOrderedIndices(filename = REAL_INPUT) {
 }
 
 function compare(left: unknown, right: unknown): number {
-  //   console.log("left1", left);
-  //   console.log("right1", right);
+  //   console.log("left", left);
+  //   console.log("right", right);
 
   if (typeof left === "number" && typeof right === "number") {
     return left - right; // if negative => left < right => i.e. inputs are in the right order
@@ -81,6 +77,9 @@ function compare(left: unknown, right: unknown): number {
     // console.log("right3", right);
     const lenLeft = left.flat(Number.POSITIVE_INFINITY).length;
     const lenRight = right.flat(Number.POSITIVE_INFINITY).length;
+    // console.log("lenLeft", lenLeft);
+    // console.log("lenRight", lenRight);
+
     // if (lenLeft === 0 && lenRight === 0) return 0
     if (lenLeft === 0 && lenRight > 0) return -1;
 
@@ -91,13 +90,18 @@ function compare(left: unknown, right: unknown): number {
       return 0;
     }
 
+    if (typeof left[0] === "undefined" && typeof right[0] !== "undefined") {
+      console.log("left length 0, left ran out of items!");
+      return -1;
+    }
+
     // if (lenLeft === 0 && true)
     for (let i = 0; i < left.length; i++) {
       const b = right[i];
-      //   console.log("b", b);
+      // console.log("b", b);
       if (typeof b === "undefined") {
         // Right side ran out of items
-        // console.log("right ran out of items!");
+        console.log("right ran out of items!");
         return 1;
       }
       const res = compare(left[i], b);
@@ -112,7 +116,7 @@ function compare(left: unknown, right: unknown): number {
 
         if (res > 0) return 1;
         if (lenLeft < lenRight) {
-        //   console.log("left ran out of items!");
+          console.log("left ran out of items!");
           return -1;
         }
         return res;
@@ -130,10 +134,10 @@ function compare(left: unknown, right: unknown): number {
     return compare(left, [right]);
   }
 
-  console.log("left2", left);
-  console.log("right2", right);
+  //   console.log("left2", left);
+  //   console.log("right2", right);
 
-  throw new Error("whoopsie");
+  throw new Error(`Whoopsie. Error comparing ${left} & ${right} `);
 }
 
 (async function run() {

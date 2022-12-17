@@ -52,6 +52,12 @@ describe("index", () => {
       const res = compare([], [3]);
       expect(res).toBeLessThan(0);
     });
+    it("should return negative when left=[] and right=[[]] since Left side ran out of items", () => {
+        //   expect.assertions(1);
+  
+        const res = compare([], [[]]);
+        expect(res).toBeLessThan(0);
+    });
     it("should return positive when left=[9] and right=[[8,7,6]]", () => {
       //   expect.assertions(1);
 
