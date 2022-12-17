@@ -50,8 +50,8 @@ async function sumOrderedIndices(filename = REAL_INPUT) {
 
     const [divider1, divider2] = [[[2]], [[6]]];
 
-    console.log("input flat.length", [...input.flat()].length);
-    console.log([...input.flat()]);
+    // console.log("input flat.length", [...input.flat()].length);
+    // console.log([...input.flat()]);
     const ordered = [divider1, divider2, ...input.flat()].sort(compare);
 
     const d1 = ordered.indexOf(divider1) + 1;
@@ -65,65 +65,8 @@ async function sumOrderedIndices(filename = REAL_INPUT) {
 }
 
 function compare(left: unknown, right: unknown): number {
-  //   console.log("left", left);
-  //   console.log("right", right);
-
   if (typeof left === "number" && typeof right === "number") {
     return left - right; // if negative => left < right => i.e. inputs are in the right order
-  }
-
-  if (Array.isArray(left) && Array.isArray(right)) {
-    // console.log("left3", left);
-    // console.log("right3", right);
-    const lenLeft = left.flat(Number.POSITIVE_INFINITY).length;
-    const lenRight = right.flat(Number.POSITIVE_INFINITY).length;
-    // console.log("lenLeft", lenLeft);
-    // console.log("lenRight", lenRight);
-
-    // if (lenLeft === 0 && lenRight === 0) return 0
-    if (lenLeft === 0 && lenRight > 0) return -1;
-
-    // console.log("left[0]", left[0]);
-    // console.log("right[0]", right[0]);
-
-    if (typeof left[0] === "undefined" && typeof right[0] === "undefined") {
-      return 0;
-    }
-
-    if (typeof left[0] === "undefined" && typeof right[0] !== "undefined") {
-      console.log("left length 0, left ran out of items!");
-      return -1;
-    }
-
-    // if (lenLeft === 0 && true)
-    for (let i = 0; i < left.length; i++) {
-      const b = right[i];
-      // console.log("b", b);
-      if (typeof b === "undefined") {
-        // Right side ran out of items
-        console.log("right ran out of items!");
-        return 1;
-      }
-      const res = compare(left[i], b);
-      if (i === left.length - 1) {
-        // last iteration
-        // const nextB = right[i + 1];
-        // if (typeof nextB !== "undefined") {
-        //   // Left side ran out of items
-        //   console.log("left ran out of items!");
-        //   return -1;
-        // }s
-
-        if (res > 0) return 1;
-        if (lenLeft < lenRight) {
-          console.log("left ran out of items!");
-          return -1;
-        }
-        return res;
-      } else if (res === 0) continue;
-      else return res;
-    }
-    // return res
   }
 
   if (typeof left === "number") {
@@ -134,8 +77,35 @@ function compare(left: unknown, right: unknown): number {
     return compare(left, [right]);
   }
 
-  //   console.log("left2", left);
-  //   console.log("right2", right);
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (typeof left[0] === "undefined") {
+      return typeof right[0] === "undefined" ? 0 : -1;
+    }
+
+    for (const [i, l] of left.entries()) {
+      const r = right[i];
+
+      if (typeof r === "undefined") {
+        // Right side ran out of items
+        return 1;
+      }
+      const res = compare(l, r);
+
+      if (i === left.length - 1) {
+        // last iteration for left
+
+        if (res > 0) return 1;
+        if (typeof right[i + 1] !== "undefined") {
+          return -1;
+        }
+      } else if (res === 0) {
+        continue;
+      }
+      return res;
+    }
+  }
+
+  
 
   throw new Error(`Whoopsie. Error comparing ${left} & ${right} `);
 }
