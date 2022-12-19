@@ -1,6 +1,6 @@
-export type Map<T> = ReadonlyArray<ReadonlyArray<T>>;
+export type Map<T = number> = ReadonlyArray<ReadonlyArray<T>>;
 
-function printMap<T extends string | number>({
+function printMap<T extends string | number = number>({
   map,
   size = {
     minRow: 0,
