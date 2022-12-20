@@ -56,7 +56,7 @@ function simulateSand(map: Map<Tiles>): {
   console.log(`Sand source @ row 0, column ${sandSource}`);
 
   const copy = map.map((r) => [...r]);
-  const abyss: Index[] = [];
+  let abyss: Index[] = [];
 
   const start: Index = [0, sandSource];
 
@@ -75,15 +75,7 @@ function simulateSand(map: Map<Tiles>): {
     if (withinMapBoundaries(atRestIndex, map)) {
       copy[atRestIndex[0]][atRestIndex[1]] = SAND_AT_REST;
     } else {
-      // updateAbyss()
-      abyss.push(atRestIndex);
-      const unreachable = abyss.findIndex(([row, col]) => {
-        return row === atRestIndex[0] + 2 && col === atRestIndex[1];
-      });
-
-      if (unreachable >= 0) {
-        abyss.splice(unreachable, 1);
-      }
+      abyss = updateAbyss(atRestIndex, abyss);
     }
 
     n++;
@@ -165,6 +157,19 @@ const directions = (
   ];
 };
 
+function updateAbyss(atRestIndex: Index, abyss: ReadonlyArray<Index>) {
+  const abysser = [...abyss];
+  abysser.push(atRestIndex);
+  const unreachable = abysser.findIndex(([row, col]) => {
+    return row === atRestIndex[0] + 2 && col === atRestIndex[1];
+  });
+
+  if (unreachable >= 0) {
+    abysser.splice(unreachable, 1);
+  }
+  return abysser;
+}
+
 function deadManSwitch(n: number): boolean {
   return n >= 28500 ? true : false;
 }
@@ -193,35 +198,28 @@ function generateMap(vectors: Vector[]) {
 
   map[0][500 - xMin] = SAND_SOURCE;
 
-  vectors.forEach((v, i, arr) => {
-    const nNodes = v.length;
+  vectors.forEach((v) => {
+    v.forEach((n, j, vi) => {
+      const last = vi[j - 1];
+      if (!last) return;
 
-    // Use indexes and splice/slice instead
-    for (let i = 0; i < nNodes; i++) {
-      const last = v[i - 1];
-
-      if (!last) continue;
-
-      const curr = v[i];
-
-      if (last[0] === curr[0]) {
+      if (last[0] === n[0]) {
         for (
-          let i = last[1] > curr[1] ? curr[1] : last[1];
-          i <= (last[1] > curr[1] ? last[1] : curr[1]);
+          let i = last[1] > n[1] ? n[1] : last[1];
+          i <= (last[1] > n[1] ? last[1] : n[1]);
           i++
         ) {
           map[i][last[0] - xMin] = ROCK;
         }
       } else {
-        for (
-          let i = last[0] > curr[0] ? curr[0] : last[0];
-          i <= (last[0] > curr[0] ? last[0] : curr[0]);
-          i++
-        ) {
-          map[last[1]][i - xMin] = ROCK;
-        }
+        const size = Math.abs(last[0] - n[0]) + 1;
+        map[n[1]].splice(
+          (n[0] < last[0] ? n[0] : last[0]) - xMin,
+          size,
+          ...Array(size).fill(ROCK)
+        );
       }
-    }
+    });
   });
   return map;
 }

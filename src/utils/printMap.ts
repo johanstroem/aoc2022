@@ -21,7 +21,7 @@ function printMap<T extends string | number = number>({
 
   map.slice(minRow, rows).forEach((row, i) => {
     console.log(
-      `${i}: [${row
+      `${i.toString().padStart(3, " ")}: [${row
         .slice(minCol, cols)
         .map((n) => `${n}`.padStart(2, " "))
         .join("")}]`
