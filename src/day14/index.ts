@@ -4,7 +4,6 @@ import createLineProcessor from "../utils/lineProcessor";
 
 async function countSand(filename = REAL_INPUT) {
   const vectors = await readInput(filename);
-  console.log("VECTORS", vectors);
 
   const map = generateMap(vectors);
   printMap({ map });
@@ -54,53 +53,42 @@ function simulateSand(map: Map<Tiles>): {
   map: Map<Tiles>;
 } {
   const sandSource = map[0].indexOf(SAND_SOURCE);
-  // Need to calculated boundaries?
-  // const {xMin, xMax, yMin, yMax} = getCorners(map)
   console.log(`Sand source @ row 0, column ${sandSource}`);
 
   const copy = map.map((r) => [...r]);
   const abyss: Index[] = [];
 
   const start: Index = [0, sandSource];
-  console.log("start", start);
 
-  let atRest = false;
+  let shouldBreak = false;
   let n = 0;
 
   do {
-    // Go down?
-    // Go diagonally left
-    // Go diagonally right
-    const { iterations: unused, index: atRestIndex } = iterate(
-      start,
-      copy,
-      0,
-      abyss
-    );
-    // console.log("index", atRestIndex);
-
-    // if (!atRestIndex) {
-    //   console.log("Sand fell into abyss");
-    //   break;
-    // }
+    const { index: atRestIndex } = iterate(start, copy, 0, abyss);
 
     if (atRestIndex[0] === start[0] && atRestIndex[1] === start[1]) {
       console.log("Sand can't move from Start");
       console.log("Final Iterations", n + 1);
-
       break;
     }
 
     if (withinMapBoundaries(atRestIndex, map)) {
       copy[atRestIndex[0]][atRestIndex[1]] = SAND_AT_REST;
-      // printMap({ map: copy });
     } else {
+      // updateAbyss()
       abyss.push(atRestIndex);
+      const unreachable = abyss.findIndex(([row, col]) => {
+        return row === atRestIndex[0] + 2 && col === atRestIndex[1];
+      });
+
+      if (unreachable >= 0) {
+        abyss.splice(unreachable, 1);
+      }
     }
 
     n++;
-    atRest = deadManSwitch(atRestIndex, map, n);
-  } while (!atRest);
+    shouldBreak = deadManSwitch(n);
+  } while (!shouldBreak);
 
   return {
     iterations: n,
@@ -108,7 +96,6 @@ function simulateSand(map: Map<Tiles>): {
   };
 }
 
-// Could throw out of bounds (i.e in "abyss") error?
 function iterate(
   [row, col]: Index,
   map: Map<Tiles>,
@@ -118,30 +105,8 @@ function iterate(
   iterations: number;
   index: Index;
 } {
-  // console.log(`iteration[${i}]: row: ${row}, col: ${col}`);
-
-  // // if (typeof map[row + 1] === "undefined") {
-  // if (row + 1 === map.length) {
-  //   console.log("Sand at bottom row");
-  //   const bottomRow = map[row + 1];
-
-  //   if (typeof bottomRow === "undefined") {
-  //     // map[row+1] = []
-  //     return {
-  //       iterations: i,
-  //       index: [row + 1, col],
-  //     };
-  //   } else {
-  //     return {
-  //       iterations: i,
-  //       index: [row, col],
-  //     };
-  //   }
-  // }
-
   if (row >= map.length) {
-    // console.log("Sand at bottom row");
-
+    // Sand at bottom row";
     return {
       iterations: i,
       index: [row, col],
@@ -149,30 +114,15 @@ function iterate(
   }
 
   const [down, downLeft, downRight] = directions([row, col], map, abyss);
-  // console.log(
-  //   `down: ${down.value}, left: ${downLeft.value}, right: ${downRight.value}`
-  // );
 
-  if (down.value === AIR) {
+  if (down.value === AIR || down.value === null) {
     // down
-    // console.log("go down");
     return iterate(down.index, map, ++i, abyss);
-  } else if (down.value === null) {
-    // console.log("go down outside", down.index);
-    return iterate(down.index, map, ++i, abyss);
-  } else if (downLeft.value === AIR) {
+  } else if (downLeft.value === AIR || downLeft.value === null) {
     // down-left
-    // console.log("go down-left");
     return iterate(downLeft.index, map, ++i, abyss);
-  } else if (downLeft.value === null) {
-    // console.log("go down-left outside", downLeft.index);
-    return iterate(downLeft.index, map, ++i, abyss);
-  } else if (downRight.value === AIR) {
+  } else if (downRight.value === AIR || downRight.value === null) {
     // down-right
-    // console.log("go down-right");
-    return iterate(downRight.index, map, ++i, abyss);
-  } else if (downRight.value === null) {
-    // console.log("go down-right outside", downRight.index);
     return iterate(downRight.index, map, ++i, abyss);
   } else {
     return {
@@ -188,16 +138,6 @@ const directions = (
   abyss: Index[] = []
 ): { index: Index; value: Tiles | null }[] => {
   const nextRow = map[row + 1] || {};
-  // const inAbyss = abyss.some(([r, c]) => {
-  //   console.log("r", r);
-  //   console.log("c", c);
-
-  //   console.log("r === row && c === col", r === row && c === col);
-
-  //   return r === row && c === col;
-  // });
-  // console.log("inAbyss?", inAbyss);
-
   const isInAbyss = ([r, c]: Index, abyss: Index[]) => {
     return abyss.some(([row, col]) => row === r && col === c);
   };
@@ -225,12 +165,8 @@ const directions = (
   ];
 };
 
-// - Add "Abyss Row" beneath bottom-most rock(s)?
-// - Calculate max possible iterations?
-// - Calculate max row (see above?)?
-function deadManSwitch([row, col]: Index, map: Map<Tiles>, n: number): boolean {
-  return n >= 30000 ? true : false;
-  // return row > 2 ? true : false
+function deadManSwitch(n: number): boolean {
+  return n >= 28500 ? true : false;
 }
 
 function withinMapBoundaries([row, col]: Index, map: Map<Tiles>) {
@@ -267,11 +203,8 @@ function generateMap(vectors: Vector[]) {
       if (!last) continue;
 
       const curr = v[i];
-      // console.log("last", last);
-      // console.log("curr", curr);
 
       if (last[0] === curr[0]) {
-        // console.log("same x values", last[0]);
         for (
           let i = last[1] > curr[1] ? curr[1] : last[1];
           i <= (last[1] > curr[1] ? last[1] : curr[1]);
@@ -280,8 +213,6 @@ function generateMap(vectors: Vector[]) {
           map[i][last[0] - xMin] = ROCK;
         }
       } else {
-        // console.log("same y values", last[1]);
-
         for (
           let i = last[0] > curr[0] ? curr[0] : last[0];
           i <= (last[0] > curr[0] ? last[0] : curr[0]);
@@ -297,8 +228,9 @@ function generateMap(vectors: Vector[]) {
 
 (async function run() {
   if (process.env.NODE_ENV === "test") return;
-
+  console.time("test");
   await countSand();
+  console.timeEnd("test");
 })();
 
 // for tests
