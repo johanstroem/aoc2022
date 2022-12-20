@@ -59,6 +59,7 @@ function simulateSand(map: Map<Tiles>): {
   console.log(`Sand source @ row 0, column ${sandSource}`);
 
   const copy = map.map((r) => [...r]);
+  const abyss: Index[] = [];
 
   const start: Index = [0, sandSource];
   console.log("start", start);
@@ -70,25 +71,35 @@ function simulateSand(map: Map<Tiles>): {
     // Go down?
     // Go diagonally left
     // Go diagonally right
-    const { iterations: unused, index: atRestIndex } =
-      iterate(start, copy, 0) || {};
-    console.log("index", atRestIndex);
+    const { iterations: unused, index: atRestIndex } = iterate(
+      start,
+      copy,
+      0,
+      abyss
+    );
+    // console.log("index", atRestIndex);
 
-    if (!atRestIndex) {
-      console.log("Sand fell into abyss");
-      break;
-    }
+    // if (!atRestIndex) {
+    //   console.log("Sand fell into abyss");
+    //   break;
+    // }
 
     if (atRestIndex[0] === start[0] && atRestIndex[1] === start[1]) {
       console.log("Sand can't move from Start");
+      console.log("Final Iterations", n + 1);
+
       break;
     }
 
-    copy[atRestIndex[0]][atRestIndex[1]] = SAND_AT_REST;
-    printMap({ map: copy });
+    if (withinMapBoundaries(atRestIndex, map)) {
+      copy[atRestIndex[0]][atRestIndex[1]] = SAND_AT_REST;
+      // printMap({ map: copy });
+    } else {
+      abyss.push(atRestIndex);
+    }
 
     n++;
-    // atRest = isInAbyss(index, map, n);
+    atRest = deadManSwitch(atRestIndex, map, n);
   } while (!atRest);
 
   return {
@@ -101,44 +112,68 @@ function simulateSand(map: Map<Tiles>): {
 function iterate(
   [row, col]: Index,
   map: Map<Tiles>,
-  i: number
+  i: number,
+  abyss: Index[] = []
 ): {
   iterations: number;
   index: Index;
-} | null {
-  console.log(`iteration[${i}]: row: ${row}, col: ${col}`);
+} {
+  // console.log(`iteration[${i}]: row: ${row}, col: ${col}`);
 
-  // if (typeof map[row + 1] === "undefined") {
+  // // if (typeof map[row + 1] === "undefined") {
+  // if (row + 1 === map.length) {
   //   console.log("Sand at bottom row");
-  //   return {
-  //     iterations: i,
-  //     index: [row, col],
-  //   };
-  // } else
+  //   const bottomRow = map[row + 1];
 
-  const [down, downLeft, downRight] = directions([row, col], map);
-  console.log(
-    `down: ${down.value}, left: ${downLeft.value}, right: ${downRight.value}`
-  );
+  //   if (typeof bottomRow === "undefined") {
+  //     // map[row+1] = []
+  //     return {
+  //       iterations: i,
+  //       index: [row + 1, col],
+  //     };
+  //   } else {
+  //     return {
+  //       iterations: i,
+  //       index: [row, col],
+  //     };
+  //   }
+  // }
+
+  if (row >= map.length) {
+    // console.log("Sand at bottom row");
+
+    return {
+      iterations: i,
+      index: [row, col],
+    };
+  }
+
+  const [down, downLeft, downRight] = directions([row, col], map, abyss);
+  // console.log(
+  //   `down: ${down.value}, left: ${downLeft.value}, right: ${downRight.value}`
+  // );
 
   if (down.value === AIR) {
     // down
-    console.log("go down");
-    return iterate(down.index, map, ++i);
+    // console.log("go down");
+    return iterate(down.index, map, ++i, abyss);
   } else if (down.value === null) {
-    return null;
+    // console.log("go down outside", down.index);
+    return iterate(down.index, map, ++i, abyss);
   } else if (downLeft.value === AIR) {
     // down-left
-    console.log("go down-left");
-    return iterate(downLeft.index, map, ++i);
+    // console.log("go down-left");
+    return iterate(downLeft.index, map, ++i, abyss);
   } else if (downLeft.value === null) {
-    return null;
+    // console.log("go down-left outside", downLeft.index);
+    return iterate(downLeft.index, map, ++i, abyss);
   } else if (downRight.value === AIR) {
     // down-right
-    console.log("go down-right");
-    return iterate(downRight.index, map, ++i);
+    // console.log("go down-right");
+    return iterate(downRight.index, map, ++i, abyss);
   } else if (downRight.value === null) {
-    return null;
+    // console.log("go down-right outside", downRight.index);
+    return iterate(downRight.index, map, ++i, abyss);
   } else {
     return {
       iterations: i,
@@ -149,12 +184,31 @@ function iterate(
 
 const directions = (
   [row, col]: Index,
-  map: Map<Tiles>
-): { index: Index; value: Tiles }[] => {
+  map: Map<Tiles>,
+  abyss: Index[] = []
+): { index: Index; value: Tiles | null }[] => {
   const nextRow = map[row + 1] || {};
-  const down = nextRow[col] || null;
-  const downLeft = nextRow[col - 1] || null;
-  const downRight = nextRow[col + 1] || null;
+  // const inAbyss = abyss.some(([r, c]) => {
+  //   console.log("r", r);
+  //   console.log("c", c);
+
+  //   console.log("r === row && c === col", r === row && c === col);
+
+  //   return r === row && c === col;
+  // });
+  // console.log("inAbyss?", inAbyss);
+
+  const isInAbyss = ([r, c]: Index, abyss: Index[]) => {
+    return abyss.some(([row, col]) => row === r && col === c);
+  };
+
+  const down = isInAbyss([row + 1, col], abyss) ? ROCK : nextRow[col] || null;
+  const downLeft = isInAbyss([row + 1, col - 1], abyss)
+    ? ROCK
+    : nextRow[col - 1] || null;
+  const downRight = isInAbyss([row + 1, col + 1], abyss)
+    ? ROCK
+    : nextRow[col + 1] || null;
   return [
     {
       index: [row + 1, col],
@@ -174,10 +228,15 @@ const directions = (
 // - Add "Abyss Row" beneath bottom-most rock(s)?
 // - Calculate max possible iterations?
 // - Calculate max row (see above?)?
-function isInAbyss([row, col]: Index, map: Map<Tiles>, n: number): boolean {
-  console.log("ROW", row);
-  return n >= 10000 ? true : false;
+function deadManSwitch([row, col]: Index, map: Map<Tiles>, n: number): boolean {
+  return n >= 30000 ? true : false;
   // return row > 2 ? true : false
+}
+
+function withinMapBoundaries([row, col]: Index, map: Map<Tiles>) {
+  return (
+    row >= 0 && row <= map.length - 1 && col >= 0 && col <= map[0].length - 1
+  );
 }
 
 function generateMap(vectors: Vector[]) {
@@ -199,8 +258,6 @@ function generateMap(vectors: Vector[]) {
   map[0][500 - xMin] = SAND_SOURCE;
 
   vectors.forEach((v, i, arr) => {
-    console.log("i", i);
-
     const nNodes = v.length;
 
     // Use indexes and splice/slice instead
@@ -214,7 +271,7 @@ function generateMap(vectors: Vector[]) {
       // console.log("curr", curr);
 
       if (last[0] === curr[0]) {
-        console.log("same x values", last[0]);
+        // console.log("same x values", last[0]);
         for (
           let i = last[1] > curr[1] ? curr[1] : last[1];
           i <= (last[1] > curr[1] ? last[1] : curr[1]);
@@ -223,7 +280,7 @@ function generateMap(vectors: Vector[]) {
           map[i][last[0] - xMin] = ROCK;
         }
       } else {
-        console.log("same y values", last[1]);
+        // console.log("same y values", last[1]);
 
         for (
           let i = last[0] > curr[0] ? curr[0] : last[0];
