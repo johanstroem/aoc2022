@@ -11,14 +11,23 @@ async function discoverCoverage(filename = REAL_INPUT) {
 
   const rowCoverage = getRowCoverageFn(sensors);
 
-  const cov10 = rowCoverage(10);
-  const cov2000000 = rowCoverage(2000000);
+  // const cov10 = rowCoverage(10);
+  //   const cov2000000 = rowCoverage(2000000);
 
-  //   console.log("cov10", cov10);
-  //   console.log("cov10 count", cov10.filter((i) => i).length);
+  // console.log("cov10", cov10);
+  // console.log("cov10 count", cov10.filter((i) => i).length);
 
-  console.log("cov2000000", cov2000000);
-  console.log("cov2000000 length", cov2000000[0][1] - cov2000000[0][0]); // should be + 1 but one beacon is at row 2000000 so it's correct anyway
+  // console.log("cov2000000", cov2000000);
+  //   console.log("cov2000000 length", cov2000000[0][1] - cov2000000[0][0]); // should be + 1 but one beacon is at row 2000000 so it's correct anyway
+
+  const MAX_MAX = 4000000;
+  for (let y = 0; y < MAX_MAX; y++) {
+    const cov = rowCoverage(y, 0, MAX_MAX);
+    if (cov.length > 1) {
+      console.log(`cov[${y}]:`, cov);
+      console.log("tuningFrequency: ", (cov[0][1] + 1) * MAX_MAX + y);
+    }
+  }
 }
 
 type Index = [x: number, y: number];
@@ -108,8 +117,12 @@ async function readInput(filename: string): Promise<[Sensor[], Beacon[]]> {
 
 function getRowCoverageFn(
   sensors: ReadonlyArray<Sensor>
-): (row: number) => Range[] {
-  return (row: number) => {
+): (row: number, min?: number, max?: number) => Range[] {
+  return (
+    row: number,
+    min = Number.NEGATIVE_INFINITY,
+    max = Number.POSITIVE_INFINITY
+  ) => {
     const coveredRanges: Range[] = sensors
       .filter((s) => {
         const distanceToRow = Math.abs(s.position[1] - row);
@@ -122,25 +135,29 @@ function getRowCoverageFn(
 
         const distanceToRow = Math.abs(s.position[1] - row);
         // console.log("distance to row", distanceToRow);
-        const xMinRowCoverage =
-          s.position[0] - (s.manhattanDistance - distanceToRow);
-        const xMaxRowCoverage =
-          s.position[0] + (s.manhattanDistance - distanceToRow);
+        const coverDistance = s.manhattanDistance - distanceToRow;
+        const xMinRowCoverage = s.position[0] - coverDistance;
+        const xMaxRowCoverage = s.position[0] + coverDistance;
         // console.log(`range: [${xMinRowCoverage}, ${xMaxRowCoverage}]`);
 
-        return [xMinRowCoverage, xMaxRowCoverage] as Range;
+        return [
+          Math.max(min, xMinRowCoverage),
+          Math.min(max, xMaxRowCoverage),
+        ] as Range;
       });
-
     return combineRanges(coveredRanges);
   };
 }
 
 function combineRanges(ranges: Range[]): Range[] {
   const sorted = ranges.sort((a, b) => a[0] - b[0]);
+  if (ranges.length === 0) {
+    throw new Error("no ranges to combine");
+  }
   return sorted.reduce(
     (acc, [min, max]) => {
       const last = acc.slice(-1)[0];
-      if (min <= last[1]) {
+      if (min - 1 <= last[1]) {
         return [...acc.slice(0, -1), [last[0], Math.max(max, last[1])]];
       } else {
         return [...acc, [min, max]];
