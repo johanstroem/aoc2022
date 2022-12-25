@@ -1,16 +1,15 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
 import createLineProcessor from "../utils/lineProcessor";
 
-async function releasePressure(filename = REAL_INPUT) {
+async function releasePressure(filename = TEST_INPUT) {
   const state = await readInput(filename);
-  // console.log("STATE", state);
 
-  //   const reducer =
   const result = [];
 
+  // const ITERATIONS = 200_000;
   // const ITERATIONS = 100_000;
-  const ITERATIONS = 10_000;
-  // const ITERATIONS = 1_000;
+  // const ITERATIONS = 10_000;
+  const ITERATIONS = 1_000;
   // const ITERATIONS = 500;
   // const ITERATIONS = 1;
 
@@ -20,17 +19,20 @@ async function releasePressure(filename = REAL_INPUT) {
     const r = iterate(state);
     result.push(r);
   }
-  // console.log("RESULT", result.length);
 
-  const sorted = result.sort((a, b) => b.score - a.score);
+  // const sorted = result.sort((a, b) => b.score - a.score);
 
-  console.log(
-    "sorted top 10",
-    sorted.slice(0, 10).map((n) => n.score)
-  );
+  // console.log(
+  //   "sorted top 10",
+  //   sorted.slice(0, 10).map((n) => n.score)
+  // );
 
-  const max = Math.max(...result.map((r) => r.score));
-  console.log("max", max);
+  // const max = Math.max(...result.map((r) => r.score));
+  const max1 = Math.max(...result.slice(0, ITERATIONS / 2).map((r) => r.score));
+  const max2 = Math.max(...result.slice(ITERATIONS / 2).map((r) => r.score));
+
+  console.log("max", max1);
+  console.log("max", max2);
 }
 
 type Valve = string;
@@ -38,57 +40,31 @@ type Valve = string;
 type ValveNode = {
   name: Valve;
   flowRate: number;
-  //   visited: boolean;
   tunnels: Valve[]; // should be ValveNode[]?
   peek: (n: number) => number;
-  //   open: (n: number) => number;
-};
-
-type State = {
-  currentLocation: Valve;
-  currentTunnels: Valve[];
-  elapsedMinutes: number;
-  opened: ValveNode[];
-  visited: ValveNode[];
-  // unvisited: ValveNode[];
-  score: number; // Pressure released
-};
-
-type Actions = {
-  // 'OPEN': (valve: Valve) => void
-  OPEN: () => void; // Opens
-  // 'MOVE': (from: Valve, to: Valve) => void
-  MOVE: (to: Valve) => void;
 };
 
 const ACTIONS = {
   OPEN: "OPEN",
   MOVE: "MOVE",
 };
-type Actiooons = keyof typeof ACTIONS;
+type Actions = keyof typeof ACTIONS;
 
-const MAX_MINUTES = 30;
+const MAX_MINUTES = 26;
 
 function peekValve(flowRate: number) {
   return (n: number) => flowRate * (MAX_MINUTES - n - 1);
-}
-
-function openValve(node: ValveNode) {
-  return (n: number) => {
-    // node.visited = true; // mutable action
-    return node.flowRate * n;
-  };
 }
 
 // function createReducer(action: Actiooons, state: Stateed) {
 //   return reducer(action, state);
 // }
 
-function iterate(state: Stateed): Stateed {
-  const { current, elapsedMinutes, opened, visited } = state;
+function iterate(state: State): State {
+  const { current, elephant, elapsedMinutes, opened, visited, deadEnds } =
+    state;
   // console.log("Elapsed", elapsedMinutes);
 
-  // console.log("CURR", current);
   // console.log("Current", [current?.name]);
 
   // console.log(
@@ -96,80 +72,156 @@ function iterate(state: Stateed): Stateed {
   //   visited.map((n) => n.name)
   // );
 
-  if (!current) {
+  if (!current || !elephant) {
     throw new Error("Forgot something?");
   }
   if (elapsedMinutes >= MAX_MINUTES) {
     // console.log(`elapsedTime ${elapsedMinutes}, MAX_MINUTES: ${MAX_MINUTES}`);
-
     return state;
   }
 
   // Need to peek() for elapsedMinutes + 1?
-
   const randomOpenThreshold = Math.random() * 6;
   // console.log("randomOpenThreshold", randomOpenThreshold);
 
-  if (
-    opened.indexOf(current) < 0 &&
-    current.flowRate > randomOpenThreshold
-  ) {
-    // console.log("ACTION => OPEN", [current.name], current.peek(elapsedMinutes));
+  if (opened.indexOf(current) < 0 && current.flowRate > randomOpenThreshold) {
+    console.log(
+      "ACTION => OPEN",
+      [current.name],
+      current.peek(elapsedMinutes),
+      { actor: "ME" }
+    );
+    // console.log("opened", opened);
+    const newState = reducer("OPEN", state, { actor: "ME" });
 
-    // console.log('opened', opened);
-    return iterate(reducer("OPEN", state));
+    // newState.elephant?
+    if (
+      newState.opened.indexOf(elephant) < 0 &&
+      elephant.flowRate > randomOpenThreshold
+    ) {
+      console.log(
+        "ACTION => OPEN",
+        [elephant.name],
+        elephant.peek(elapsedMinutes),
+        { actor: "ELEPHANT" }
+      );
+      return iterate(reducer("OPEN", newState, { actor: "ELEPHANT" }));
+    } else {
+      const unvisited = elephant.tunnels.filter(
+        (e) => !newState.visited.map((n) => n.name).includes(e)
+      );
+      console.log("Unvisited", unvisited);
+      const deads = deadEnds.map((d) => d.name);
+      const nonDeadEnds = elephant.tunnels.filter((e) => !deads.includes(e));
+      console.log("nonDeadEnds", nonDeadEnds);
+
+      // const next = Math.floor(Math.random() * unvisited.length);
+      const to = unvisited.length
+        ? unvisited[Math.floor(Math.random() * unvisited.length)]
+        : nonDeadEnds[Math.floor(Math.random() * nonDeadEnds.length)];
+      console.log("ACTION => MOVE 1", { to }, { actor: "ELEPHANT" });
+      return iterate(reducer("MOVE", newState, { actor: "ELEPHANT", to }));
+    }
   } else {
-    // [ ] Should not move back to current
+    // [ ] Should not move back to current?
     // [X] Should prefer unvisited nodes?
-    // [ ] Should avoid dead-ends once visited
+    // [X] Should avoid dead-ends already visited
 
     const unvisited = current.tunnels.filter(
       (e) => !visited.map((n) => n.name).includes(e)
     );
+    console.log("Unvisited", unvisited);
+    const deads = deadEnds.map((d) => d.name);
 
-    // console.log("Unvisited", unvisited);
-    // console.log("ACTION => MOVE");
-
+    const nonDeadEnds = current.tunnels.filter((e) => !deads.includes(e));
+    console.log("nonDeadEnds", nonDeadEnds);
     // const next = Math.floor(Math.random() * unvisited.length);
-
     const to = unvisited.length
       ? unvisited[Math.floor(Math.random() * unvisited.length)]
-      : current.tunnels[Math.floor(Math.random() * current.tunnels.length)];
+      : nonDeadEnds[Math.floor(Math.random() * nonDeadEnds.length)];
+    console.log("ACTION => MOVE", { to }, { actor: "ME" });
 
-    const newState = reducer("MOVE", state, { to });
+    console.log(
+      "visited 1",
+      state.visited.map((v) => v.name)
+    );
 
-    return iterate(newState);
+    const newState = reducer("MOVE", state, { actor: "ME", to });
+
+    // Same if/else block for elephant as above
+    if (
+      newState.opened.indexOf(elephant) < 0 &&
+      elephant.flowRate > randomOpenThreshold
+    ) {
+      console.log(
+        "ACTION => OPEN",
+        [elephant.name],
+        elephant.peek(elapsedMinutes),
+        { actor: "ELEPHANT" }
+      );
+
+      return iterate(reducer("OPEN", newState, { actor: "ELEPHANT" }));
+    } else {
+      console.log(
+        "visited 2",
+        newState.visited.map((v) => v.name)
+      );
+
+      const unvisited = elephant.tunnels.filter(
+        (e) => !newState.visited.map((n) => n.name).includes(e)
+      );
+
+      console.log("Unvisited", unvisited);
+      const deads = deadEnds.map((d) => d.name);
+      const nonDeadEnds = elephant.tunnels.filter((e) => !deads.includes(e));
+
+      console.log("nonDeadEnds", nonDeadEnds);
+
+      // const next = Math.floor(Math.random() * unvisited.length);
+      const to = unvisited.length
+        ? unvisited[Math.floor(Math.random() * unvisited.length)]
+        : nonDeadEnds[Math.floor(Math.random() * nonDeadEnds.length)];
+
+      console.log("ACTION => MOVE 2", { to }, { actor: "ELEPHANT" });
+
+      return iterate(reducer("MOVE", newState, { actor: "ELEPHANT", to }));
+    }
   }
 }
 
+// Update reducer to handle "Actor"
 function reducer(
-  action: Actiooons,
-  state: Stateed,
-  payload?: { to: Valve }
-): Stateed {
+  action: Actions,
+  state: State,
+  payload: { actor: "ME" | "ELEPHANT"; to?: Valve }
+): State {
   switch (action) {
     case ACTIONS.OPEN: {
       //   console.log("ACTIONS OPEN");
+      const actor = payload.actor === "ME" ? state.current : state.elephant;
       return {
         ...state,
         score:
           state.score +
-          state.current!.flowRate * (MAX_MINUTES - state.elapsedMinutes - 1), // should be -1 extra for time it takes to open!
-        opened: [...state.opened, state.current as ValveNode],
-        elapsedMinutes: state.elapsedMinutes + 1,
+          actor!.flowRate *
+            (MAX_MINUTES - Math.floor(state.elapsedMinutes) - 1), // should be -1 extra for time it takes to open!
+        opened: [...state.opened, actor as ValveNode],
+        elapsedMinutes: state.elapsedMinutes + 0.5,
       };
     }
     case ACTIONS.MOVE: {
       //   console.log("ACTIONS MOVE");
+      const actor = payload.actor === "ME";
+      const to = state.nodes.find((n) => n.name === payload?.to) || null;
       return {
         ...state,
         visited:
-          state.current === null ||
-          state.visited.findIndex((n) => n.name === state.current?.name) >= 0
+          to === null || state.visited.findIndex((n) => n.name === to.name) >= 0
             ? [...state.visited]
-            : [...state.visited, state.current],
-        current: state.nodes.find((n) => n.name === payload?.to) || null,
-        elapsedMinutes: state.elapsedMinutes + 1,
+            : [...state.visited, to],
+        current: actor ? to : state.current,
+        elephant: !actor ? to : state.elephant,
+        elapsedMinutes: state.elapsedMinutes + 0.5,
       };
     }
     default: {
@@ -180,16 +232,18 @@ function reducer(
 
 const INITIAL_STATE = {
   current: null as null | ValveNode,
+  elephant: null as null | ValveNode,
   elapsedMinutes: 0 as number,
   opened: [] as ValveNode[],
   visited: [] as ValveNode[],
   nodes: [] as ValveNode[],
+  deadEnds: [] as ValveNode[],
   score: 0 as number,
 } as const;
 
-type Stateed = typeof INITIAL_STATE;
+type State = typeof INITIAL_STATE;
 
-async function readInput(filename: string): Promise<Stateed> {
+async function readInput(filename: string): Promise<State> {
   const processor = await createLineProcessor(filename);
 
   let state = { ...INITIAL_STATE };
@@ -217,6 +271,11 @@ async function readInput(filename: string): Promise<Stateed> {
 
     if (state.current === null) {
       state.current = node;
+      state.elephant = node;
+      state.visited.push(node);
+    }
+    if (node.tunnels.length === 1) {
+      state.deadEnds.push(node);
     }
     state.nodes.push(node);
   }
