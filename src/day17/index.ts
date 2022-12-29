@@ -7,9 +7,10 @@ const SHAPES = {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       // console.log("new pos", [bx, by], "bottom", bottom);
 
-      // const expandedBottom = expandBottom(bottom)
-      // console.log('expanded', expandedBottom);
-      
+      const expandedBottom = expandBottom(bottom);
+
+      console.log("expanded", expandedBottom, "length:", expandedBottom.length);
+
       const left = bx < 0;
       const right = bx + 3 >= bottom.length;
       const collided = [
@@ -17,17 +18,16 @@ const SHAPES = {
         [bx + 1, by],
         [bx + 2, by],
         [bx + 3, by],
-      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
-
-      // console.log("left -", left);
-      // console.log("right -", right);
-      // console.log("collided -", collided);
+      ].some(([bbx, bby]) =>
+        expandedBottom.some(([x, y]) => x === bbx && y === bby)
+      );
       return left || right || collided; // ####
     },
   },
   "+": {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       // console.log("new pos", [bx, by], "bottom", bottom);
+      const expandedBottom = expandBottom(bottom);
 
       const left = bx < 0;
       const right = bx + 2 >= bottom.length;
@@ -37,7 +37,9 @@ const SHAPES = {
         [bx + 1, by + 1],
         [bx + 1, by - 1],
         [bx + 2, by],
-      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
+      ].some(([bbx, bby]) =>
+        expandedBottom.some(([x, y]) => x === bbx && y === bby)
+      );
       // console.log("left +", left);
       // console.log("right +", right);
       // console.log("collided +", collided);
@@ -48,13 +50,17 @@ const SHAPES = {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       const left = bx < 0;
       const right = bx + 2 >= bottom.length;
+      const expandedBottom = expandBottom(bottom);
+
       const collided = [
         [bx, by],
         [bx + 1, by],
         [bx + 2, by],
         [bx + 2, by + 1],
         [bx + 2, by + 2],
-      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
+      ].some(([bbx, bby]) =>
+        expandedBottom.some(([x, y]) => x === bbx && y === bby)
+      );
       return left || right || collided;
     },
   },
@@ -62,12 +68,16 @@ const SHAPES = {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       const left = bx < 0;
       const right = bx >= bottom.length;
+      const expandedBottom = expandBottom(bottom);
+
       const collided = [
         [bx, by],
         [bx, by + 1],
         [bx, by + 2],
         [bx, by + 3],
-      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
+      ].some(([bbx, bby]) =>
+        expandedBottom.some(([x, y]) => x === bbx && y === bby)
+      );
       return left || right || collided;
     },
   },
@@ -75,12 +85,16 @@ const SHAPES = {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       const left = bx < 0;
       const right = bx + 1 >= bottom.length;
+      const expandedBottom = expandBottom(bottom);
+
       const collided = [
         [bx, by],
         [bx, by + 1],
         [bx + 1, by],
         [bx + 1, by + 1],
-      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
+      ].some(([bbx, bby]) =>
+        expandedBottom.some(([x, y]) => x === bbx && y === bby)
+      );
       return left || right || collided;
     },
   },
@@ -114,7 +128,7 @@ async function tetris(filename = REAL_INPUT) {
   // printBottom(INITIAL_BOTTOM);
 
   // const N = 2022; // Number of rocks
-  const N = 11;
+  const N = 10;
   let charIndex = 0;
 
   let bottom = INITIAL_BOTTOM.map((v, i) => [i, v] as Index);
@@ -134,9 +148,9 @@ async function tetris(filename = REAL_INPUT) {
       position
     );
 
-    for (let j = 0; j < 100; j++) {
+    for (let j = 0; j < 100000; j++) {
       const move = input.charAt(charIndex) as Move;
-      // console.log(`charAt(${charIndex}): [${move}]`);
+      console.log(`charAt(${charIndex}): [${move}]`);
       charIndex = charIndex + 1 >= input.length ? 0 : charIndex + 1;
 
       if (MOVES[move] === "RIGHT") {
@@ -174,10 +188,10 @@ async function tetris(filename = REAL_INPUT) {
         break;
       }
 
-      if (j === 7) {
-        bottom = updateBottom(shapeChar, position, bottom);
-        break;
-      }
+      // if (j === 7) {
+      //   bottom = updateBottom(shapeChar, position, bottom);
+      //   break;
+      // }
     }
   }
   printBottom(bottom.map((b) => b[1]));
@@ -235,63 +249,28 @@ function updateBottom(shape: Shapes, [x, y]: Index, bottom: Index[]): Index[] {
   }
 }
 function expandBottom(bottom: Index[]): Index[] {
-  console.log("bottom", bottom);
-
   const sorted = [...bottom].sort((a, b) => b[1] - a[1]);
-  console.log("sorted", sorted);
+  // console.log("sorted", sorted);
 
-  // sorted.forEach(([x, y], i) => {
-  //   console.log(`x: [${x}], y: [${y}], i: [${i}]`);
-
-  //   if (i === 6) {
-  //     return
-  //   }
-  //   // console.log("bottom[x - 1][1]", bottom[x - 1][1]);
-  //   // console.log("bottom[x + 1][1]", bottom[x + 1][1]);
-
-  //   if (i === 0) {
-  //     if (bottom[x - 1][1] > y) {
-  //       console.log('HERE i === 6');
-  //       const add = Array(y - bottom[x - 1][1]).fill(x)
-
-  //       console.log('add2', add);
-        
-  //     }
-  //     return
-  //   }
-
-  //   if (bottom[x - 1][1] > y || bottom[x + 1][1] > y) {
-  //     console.log('HERE');
-  //     const add = Array(Math.max( y - bottom[x - 1][1], y - bottom[x + 1][1])).fill(x)
-      
-  //   }
-  // });
-
-  const delta = sorted[0][1] - sorted[6][1]
-  console.log('delta', delta);
-const min = sorted[6][1]
+  const delta = sorted[0][1] - sorted[6][1];
+  // console.log("delta", delta);
+  const min = sorted[6][1];
   const expanded: Index[] = bottom.flatMap(([x, y], i) => {
     if (y === min) {
       // lowest
-      return [[x,y] as Index]
+      return [[x, y] as Index];
     } else {
-      console.log('length', y-min);
-      
-      const add = Array(y - min).fill(x).map((x, i) => {
-        console.log('to add', [x, y - i - 1]);
-        
-        return [x, y - i - 1] as Index
-      })
-      console.log('add', add);
-      return [[x,y] as Index, ...add] as Index[]
+      const add = Array(y - min)
+        .fill(x)
+        .map((x, i) => {
+          return [x, y - i - 1] as Index;
+        });
+      // console.log("add", add);
+      return [[x, y] as Index, ...add] as Index[];
     }
-  })
+  });
 
-  console.log('expanded', expanded);
-  
-
-
-
+  // console.log("expanded", expanded, "length: ", expanded.length);
   return expanded;
 }
 
@@ -349,6 +328,8 @@ function printBottom(bottom: typeof INITIAL_BOTTOM, pos?: Index) {
   const [posX, posY] = pos || [null, null];
   // console.log(`posX: [${posX}], posY: [${posY}]`);
 
+  console.log('bototm', bottom);
+  
   for (let k = max + 5; k > max; k--) {
     if (posY === k) {
       const row = Array(7).fill(". ");
