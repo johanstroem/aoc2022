@@ -106,23 +106,33 @@ const MOVES: Record<Move, typeof DIRECTIONS[number]> = {
 
 const INITIAL_BOTTOM = Array(7).fill(0);
 
-async function tetris(filename = REAL_INPUT) {
+// async function tetris(filename = REAL_INPUT, iterations = 2022) {
+async function tetris({
+  filename = REAL_INPUT,
+  iterations = 2022,
+  bottom = INITIAL_BOTTOM.map((v, i) => [i, v] as Index),
+  offset = 0,
+}): Promise<[bottom: Index[], offset: number]> {
   const input = await readInput(filename);
 
-  console.log("input", input, "len:", input.length);
-  console.log("max iterations:", 2022 * 3);
+  console.log("============== START ===================");
+
+  printBottom(bottom);
+
+  // console.log("input", input, "len:", input.length);
+  // console.log("max iterations:", 2022 * 3);
 
   //   INITIAL_BOTTOM[1] = 2;
-  console.log("INITIAL_BOTTOM", INITIAL_BOTTOM);
+  // console.log("INITIAL_BOTTOM", INITIAL_BOTTOM);
 
   // printBottom(INITIAL_BOTTOM);
 
-  const N = 1_000_000_000_000 // Oh shit
   // const N = 2022; // Number of rocks
-  // const N = 11;
-  let charIndex = 0;
+  const N = iterations;
+  let charIndex = offset;
+  let moves = offset;
 
-  let bottom = INITIAL_BOTTOM.map((v, i) => [i, v] as Index);
+  // let bottom = INITIAL_BOTTOM.map((v, i) => [i, v] as Index);
 
   for (let i = 0; i < N; i++) {
     // let shape = SHAPES["-"];
@@ -133,7 +143,7 @@ async function tetris(filename = REAL_INPUT) {
     let shape = SHAPES[shapeChar];
 
     let position = getStartPosition(shapeChar, bottom);
-    console.log(`InitialPosition: [${[position]}], shape: [${shapeChar}]`);
+    // console.log(`InitialPosition: [${[position]}], shape: [${shapeChar}]`);
     // printBottom(
     //   // bottom.map((b) => b[1]),
     //   bottom,
@@ -141,9 +151,15 @@ async function tetris(filename = REAL_INPUT) {
     // );
 
     for (let j = 0; j < 100000; j++) {
+      // if (charIndex === 0 && i > 0) {
+      //   console.log(
+      //     `START NEW CHAR ITERATION @ N=${i}, j=${j}, char=${shapeChar}, moves=${moves}`
+      //   );
+      // }
       const move = input.charAt(charIndex) as Move;
       // console.log(`charAt(${charIndex}): [${move}]`);
       charIndex = charIndex + 1 >= input.length ? 0 : charIndex + 1;
+      moves++;
 
       if (MOVES[move] === "RIGHT") {
         // console.log("try move right");
@@ -176,9 +192,37 @@ async function tetris(filename = REAL_INPUT) {
         // update bottom
         // console.log(`shape hit bottom (at rest):`, position);
         bottom = updateBottom(shapeChar, position, bottom);
-        console.log('bottom length', bottom.length);
-        
+        // console.log("bottom length", bottom.length);
         // printBottom(bottom.map((b) => b[1]));
+
+        // Cycle finder
+        const landIteration = 29;
+        if (i > 0 && j === landIteration && shapeChar === "-") {
+          console.log(
+            `${shapeChar} shape landed @[${position}] N=${i}, j=${j}, char=${shapeChar}, moves=${moves}`
+          );
+        }
+        if (i > 0 && j === landIteration && shapeChar === "+") {
+          console.log(
+            `${shapeChar} shape landed @[${position}] N=${i}, j=${j}, char=${shapeChar}, moves=${moves}`
+          );
+        }
+        if (i > 0 && j === landIteration && shapeChar === "L") {
+          console.log(
+            `${shapeChar} shape landed @[${position}] N=${i}, j=${j}, char=${shapeChar}, moves=${moves}`
+          );
+        }
+        if (i > 0 && j === landIteration && shapeChar === "I") {
+          console.log(
+            `${shapeChar} shape landed @[${position}] N=${i}, j=${j}, char=${shapeChar}, moves=${moves}`
+          );
+        }
+        if (i > 0 && j === landIteration && shapeChar === "o") {
+          console.log(
+            `${shapeChar} shape landed @[${position}] N=${i}, j=${j}, char=${shapeChar}, moves=${moves}`
+          );
+        }
+
         break;
       }
 
@@ -191,79 +235,70 @@ async function tetris(filename = REAL_INPUT) {
   // printBottom(bottom.map((b) => b[1]));
   printBottom(bottom);
   // printBottom(expandBottom(bottom));
-  const max = Math.max(...bottom.map((b) => b[1]));
+  console.log("input.len:", input.length);
+  console.log("total moves", moves);
+  // console.log(`next char: [${input.charAt(charIndex)}], charIndex: [${charIndex}]`);
+  console.log(
+    `N: ${N}, shape N-1: ${getShape(N - 1)}, shape N: ${getShape(
+      N
+    )}, shape N+1: ${getShape(N + 1)}`
+  );
 
-  console.log("max", max);
-
-  const result = [];
+  return [bottom, charIndex];
 }
 
 function updateBottom(shape: Shapes, [x, y]: Index, bottom: Index[]): Index[] {
-
   // need to filter unneeded bottom indexes, e.g. rows below any full row
   // ... or just cut any lines > X lines below?
   switch (shape) {
     case "-": {
-      return [
-        // ...bottom.slice(0, x),
-        ...bottom,
-        [x, y],
-        [x + 1, y],
-        [x + 2, y],
-        [x + 3, y],
-        // ...bottom.slice(x + 4),
-      ];
+      return cutBottom([...bottom, [x, y], [x + 1, y], [x + 2, y], [x + 3, y]]);
     }
     case "+": {
-      return [
-        // ...bottom.slice(0, x),
+      return cutBottom([
         ...bottom,
         [x, y],
         [x + 1, y],
         [x + 1, y - 1],
         [x + 1, y + 1],
         [x + 2, y],
-        // ...bottom.slice(x + 3),
-      ];
+      ]);
     }
     case "L": {
-      return [
-        // ...bottom.slice(0, x),
+      return cutBottom([
         ...bottom,
         [x, y],
         [x + 1, y],
         [x + 2, y],
         [x + 2, y + 1],
         [x + 2, y + 2],
-        // ...bottom.slice(x + 3),
-      ];
+      ]);
     }
     case "I": {
-      return [
-        // ...bottom.slice(0, x),
-        ...bottom,
-        [x, y],
-        [x, y + 1],
-        [x, y + 2],
-        [x, y + 3],
-        //  ...bottom.slice(x + 1)
-      ];
+      return cutBottom([...bottom, [x, y], [x, y + 1], [x, y + 2], [x, y + 3]]);
     }
     case "o": {
-      return [
-        // ...bottom.slice(0, x),
+      return cutBottom([
         ...bottom,
         [x, y],
         [x + 1, y],
         [x, y + 1],
         [x + 1, y + 1],
-        // ...bottom.slice(x + 2),
-      ];
+      ]);
     }
     default: {
       return bottom;
     }
   }
+}
+
+function cutBottom(bottom: Index[]): Index[] {
+  const X = 200;
+  if (bottom.length < X * 2) return bottom;
+  // console.log('bottom.length % X', bottom.length % X);
+
+  // if (bottom.length % X !== 2) return bottom;
+  return bottom.slice(X);
 }
 
 function expandBottom(bottom: Index[]): Index[] {
@@ -375,7 +410,89 @@ function printBottom(bottom: Index[], pos?: Index) {
 (async function run() {
   if (process.env.NODE_ENV === "test") return;
   console.time("run");
-  await tetris();
+
+  const INPUT = REAL_INPUT;
+
+  // const nFullIterations = 22 + 35 * 3;
+
+  // const [first, firstOffset] = await tetris({
+  //   filename: INPUT,
+  //   iterations: 440,
+  // });
+
+  // console.log('firstOffset', firstOffset);
+
+  // const firstMax = Math.max(...first.map((b) => b[1]));
+  // console.log(`height after initial full iteration (N=${440})`, firstMax);
+
+  const nFullIteration = 1730;
+  // console.log("nFullIteration", nFullIteration);
+
+  // const [fullIteration, fullOffset] = await tetris({
+  //   filename: INPUT,
+  //   iterations: nFullIteration,
+  //   bottom: first,
+  //   offset: firstOffset
+  // });
+
+  // const fullIterationMax =
+  //   Math.max(...fullIteration.map((b) => b[1])) - firstMax;
+  // console.log("fullIterationMax", fullIterationMax);
+
+  const N = 1_000_000_000_000; // Oh shit
+
+  // const fullIterations = Math.floor((N - 440) / nFullIteration);
+
+  // const [rest] = await tetris({
+  //   filename: INPUT,
+  //   iterations: N % nFullIteration,
+  //   bottom: fullIteration,
+  //   offset: fullOffset
+  // });
+
+  // const restMax =
+  //   Math.max(...rest.map((b) => b[1])) - (fullIterationMax + firstMax);
+  // console.log("restMax", restMax);
+
+  // console.log(
+  //   "total height =",
+  //   firstMax + fullIterationMax * fullIterations + restMax
+  // );
+
+  const [first, firstOffset] = await tetris({
+    filename: INPUT,
+    iterations: nFullIteration,
+  });
+
+  const firstMax = Math.max(...first.map((b) => b[1]));
+
+  const [second, secondOffset] = await tetris({
+    filename: INPUT,
+    iterations: nFullIteration,
+    bottom: first,
+    offset: firstOffset,
+  });
+
+  const secondMax = Math.max(...second.map((b) => b[1])) - firstMax;
+
+  const [third] = await tetris({
+    filename: INPUT,
+    iterations: N % nFullIteration,
+    bottom: second,
+    offset: secondOffset,
+  });
+  const thirdMax = Math.max(...third.map((b) => b[1])) - (secondMax + firstMax);
+
+  const fullIterations = Math.floor(N / nFullIteration);
+  console.log("full iteration cycles", fullIterations);
+  console.log("leftover iterations", N % nFullIteration);
+
+  console.log(
+    `firstMax: ${firstMax}, secondMax: ${secondMax}, thirdMax: ${thirdMax}`
+  );
+
+  console.log("total:", firstMax + secondMax * (fullIterations - 1) + thirdMax);
+
   console.timeEnd("run");
 })();
 
