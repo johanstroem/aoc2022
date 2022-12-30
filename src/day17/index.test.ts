@@ -16,13 +16,11 @@ describe("index", () => {
 
       const res = updateBottom("-", [2, 1], bottom);
       expect(res).toEqual([
-        [0, 0],
-        [1, 0],
+        ...bottom,
         [2, 1],
         [3, 1],
         [4, 1],
         [5, 1],
-        [6, 0],
       ]);
     });
     it("should update bottom for '+' shape", () => {
@@ -39,13 +37,12 @@ describe("index", () => {
       const res = updateBottom("+", [1, 2], bottom);
       printBottom(res);
       expect(res).toEqual([
-        [0, 0],
+        ...bottom,
         [1, 2],
+        [2, 2],
+        [2, 1],
         [2, 3],
         [3, 2],
-        [4, 0],
-        [5, 0],
-        [6, 0],
       ]);
     });
   });

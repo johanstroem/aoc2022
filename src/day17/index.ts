@@ -7,39 +7,35 @@ const SHAPES = {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       // console.log("new pos", [bx, by], "bottom", bottom);
 
-      const expandedBottom = expandBottom(bottom);
+      // const expandedBottom = expandBottom(bottom);
 
-      console.log("expanded", expandedBottom, "length:", expandedBottom.length);
+      // console.log("expanded", expandedBottom, "length:", expandedBottom.length);
 
       const left = bx < 0;
-      const right = bx + 3 >= bottom.length;
+      const right = bx + 3 >= INITIAL_BOTTOM.length;
       const collided = [
         [bx, by],
         [bx + 1, by],
         [bx + 2, by],
         [bx + 3, by],
-      ].some(([bbx, bby]) =>
-        expandedBottom.some(([x, y]) => x === bbx && y === bby)
-      );
+      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
       return left || right || collided; // ####
     },
   },
   "+": {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       // console.log("new pos", [bx, by], "bottom", bottom);
-      const expandedBottom = expandBottom(bottom);
+      // const expandedBottom = expandBottom(bottom);
 
       const left = bx < 0;
-      const right = bx + 2 >= bottom.length;
+      const right = bx + 2 >= INITIAL_BOTTOM.length;
 
       const collided = [
         [bx, by],
         [bx + 1, by + 1],
         [bx + 1, by - 1],
         [bx + 2, by],
-      ].some(([bbx, bby]) =>
-        expandedBottom.some(([x, y]) => x === bbx && y === bby)
-      );
+      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
       // console.log("left +", left);
       // console.log("right +", right);
       // console.log("collided +", collided);
@@ -49,8 +45,8 @@ const SHAPES = {
   L: {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       const left = bx < 0;
-      const right = bx + 2 >= bottom.length;
-      const expandedBottom = expandBottom(bottom);
+      const right = bx + 2 >= INITIAL_BOTTOM.length;
+      // const expandedBottom = expandBottom(bottom);
 
       const collided = [
         [bx, by],
@@ -58,43 +54,37 @@ const SHAPES = {
         [bx + 2, by],
         [bx + 2, by + 1],
         [bx + 2, by + 2],
-      ].some(([bbx, bby]) =>
-        expandedBottom.some(([x, y]) => x === bbx && y === bby)
-      );
+      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
       return left || right || collided;
     },
   },
   I: {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       const left = bx < 0;
-      const right = bx >= bottom.length;
-      const expandedBottom = expandBottom(bottom);
+      const right = bx >= INITIAL_BOTTOM.length;
+      // const expandedBottom = expandBottom(bottom);
 
       const collided = [
         [bx, by],
         [bx, by + 1],
         [bx, by + 2],
         [bx, by + 3],
-      ].some(([bbx, bby]) =>
-        expandedBottom.some(([x, y]) => x === bbx && y === bby)
-      );
+      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
       return left || right || collided;
     },
   },
   o: {
     collision: ([bx, by]: Index, bottom: Index[]) => {
       const left = bx < 0;
-      const right = bx + 1 >= bottom.length;
-      const expandedBottom = expandBottom(bottom);
+      const right = bx + 1 >= INITIAL_BOTTOM.length;
+      // const expandedBottom = expandBottom(bottom);
 
       const collided = [
         [bx, by],
         [bx, by + 1],
         [bx + 1, by],
         [bx + 1, by + 1],
-      ].some(([bbx, bby]) =>
-        expandedBottom.some(([x, y]) => x === bbx && y === bby)
-      );
+      ].some(([bbx, bby]) => bottom.some(([x, y]) => x === bbx && y === bby));
       return left || right || collided;
     },
   },
@@ -127,8 +117,9 @@ async function tetris(filename = REAL_INPUT) {
 
   // printBottom(INITIAL_BOTTOM);
 
+  const N = 1_000_000_000_000 // Oh shit
   // const N = 2022; // Number of rocks
-  const N = 10;
+  // const N = 11;
   let charIndex = 0;
 
   let bottom = INITIAL_BOTTOM.map((v, i) => [i, v] as Index);
@@ -143,14 +134,15 @@ async function tetris(filename = REAL_INPUT) {
 
     let position = getStartPosition(shapeChar, bottom);
     console.log(`InitialPosition: [${[position]}], shape: [${shapeChar}]`);
-    printBottom(
-      bottom.map((b) => b[1]),
-      position
-    );
+    // printBottom(
+    //   // bottom.map((b) => b[1]),
+    //   bottom,
+    //   position
+    // );
 
     for (let j = 0; j < 100000; j++) {
       const move = input.charAt(charIndex) as Move;
-      console.log(`charAt(${charIndex}): [${move}]`);
+      // console.log(`charAt(${charIndex}): [${move}]`);
       charIndex = charIndex + 1 >= input.length ? 0 : charIndex + 1;
 
       if (MOVES[move] === "RIGHT") {
@@ -184,6 +176,8 @@ async function tetris(filename = REAL_INPUT) {
         // update bottom
         // console.log(`shape hit bottom (at rest):`, position);
         bottom = updateBottom(shapeChar, position, bottom);
+        console.log('bottom length', bottom.length);
+        
         // printBottom(bottom.map((b) => b[1]));
         break;
       }
@@ -194,7 +188,9 @@ async function tetris(filename = REAL_INPUT) {
       // }
     }
   }
-  printBottom(bottom.map((b) => b[1]));
+  // printBottom(bottom.map((b) => b[1]));
+  printBottom(bottom);
+  // printBottom(expandBottom(bottom));
   const max = Math.max(...bottom.map((b) => b[1]));
 
   console.log("max", max);
@@ -203,44 +199,65 @@ async function tetris(filename = REAL_INPUT) {
 }
 
 function updateBottom(shape: Shapes, [x, y]: Index, bottom: Index[]): Index[] {
+
+  // need to filter unneeded bottom indexes, e.g. rows below any full row
+  // ... or just cut any lines > X lines below?
   switch (shape) {
     case "-": {
       return [
-        ...bottom.slice(0, x),
+        // ...bottom.slice(0, x),
+        ...bottom,
         [x, y],
         [x + 1, y],
         [x + 2, y],
         [x + 3, y],
-        ...bottom.slice(x + 4),
+        // ...bottom.slice(x + 4),
       ];
     }
     case "+": {
       return [
-        ...bottom.slice(0, x),
+        // ...bottom.slice(0, x),
+        ...bottom,
         [x, y],
+        [x + 1, y],
+        [x + 1, y - 1],
         [x + 1, y + 1],
         [x + 2, y],
-        ...bottom.slice(x + 3),
+        // ...bottom.slice(x + 3),
       ];
     }
     case "L": {
       return [
-        ...bottom.slice(0, x),
+        // ...bottom.slice(0, x),
+        ...bottom,
         [x, y],
         [x + 1, y],
+        [x + 2, y],
+        [x + 2, y + 1],
         [x + 2, y + 2],
-        ...bottom.slice(x + 3),
+        // ...bottom.slice(x + 3),
       ];
     }
     case "I": {
-      return [...bottom.slice(0, x), [x, y + 3], ...bottom.slice(x + 1)];
+      return [
+        // ...bottom.slice(0, x),
+        ...bottom,
+        [x, y],
+        [x, y + 1],
+        [x, y + 2],
+        [x, y + 3],
+        //  ...bottom.slice(x + 1)
+      ];
     }
     case "o": {
       return [
-        ...bottom.slice(0, x),
+        // ...bottom.slice(0, x),
+        ...bottom,
+        [x, y],
+        [x + 1, y],
         [x, y + 1],
         [x + 1, y + 1],
-        ...bottom.slice(x + 2),
+        // ...bottom.slice(x + 2),
       ];
     }
     default: {
@@ -248,6 +265,7 @@ function updateBottom(shape: Shapes, [x, y]: Index, bottom: Index[]): Index[] {
     }
   }
 }
+
 function expandBottom(bottom: Index[]): Index[] {
   const sorted = [...bottom].sort((a, b) => b[1] - a[1]);
   // console.log("sorted", sorted);
@@ -322,14 +340,13 @@ async function readInput(filename: string): Promise<string> {
   return input;
 }
 
-function printBottom(bottom: typeof INITIAL_BOTTOM, pos?: Index) {
-  const max = Math.max(...bottom);
+function printBottom(bottom: Index[], pos?: Index) {
+  const max = Math.max(...bottom.map(([_, y]) => y));
+  const min = Math.min(...bottom.map(([_, y]) => y));
   let line = "";
   const [posX, posY] = pos || [null, null];
   // console.log(`posX: [${posX}], posY: [${posY}]`);
 
-  console.log('bototm', bottom);
-  
   for (let k = max + 5; k > max; k--) {
     if (posY === k) {
       const row = Array(7).fill(". ");
@@ -341,18 +358,18 @@ function printBottom(bottom: typeof INITIAL_BOTTOM, pos?: Index) {
     }
   }
 
-  let cols = "    ";
-  for (let i = max; i >= Math.max(Math.min(...bottom) - 30, 0); i--) {
-    for (let j = 0; j < bottom.length; j++) {
-      line += bottom[j] === i ? "# " : ". ";
-      cols += ` ${j}`;
+  for (let i = max; i >= Math.max(min - 30, 0); i--) {
+    const atRow = bottom.filter(([_x, y]) => y === i);
+
+    for (let j = 0; j <= 6; j++) {
+      line += atRow.findIndex(([x, _y]) => x === j) >= 0 ? "# " : ". ";
     }
     console.log(`${i + 0}:`.padStart(4), line.trim());
 
     line = "";
   }
 
-  console.log(cols.trimEnd().slice(0, bottom.length * 2 + 5));
+  console.log("     0 1 2 3 4 5 6");
 }
 
 (async function run() {
