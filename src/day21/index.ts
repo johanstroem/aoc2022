@@ -3,50 +3,48 @@ import createLineProcessor from "../utils/lineProcessor";
 
 type Operation = string;
 type Expression = string;
-type Instruction = Resolved | Unknown | Pending;
-type Resolved = [id: string, n: number];
-type Unknown = [id: string, operation: Operation];
-type Pending = [id: string, expression: Expression];
 
-const OPERAND = ["+", "-", "/", "*"] as const;
-type Operand = typeof OPERAND[number];
+type Instruction<T> = [id: string, InstructionType: T];
+
+const OPERATORS = ["+", "-", "/", "*"] as const;
+type Operator = typeof OPERATORS[number];
 
 const HUMAN = "humn" as const;
 
 async function getRootSum(filename = REAL_INPUT) {
-  const input: Instruction[] = await readInput(filename);
+  const input: Instruction<unknown>[] = await readInput(filename);
 
   const parsed = input.map(([id, n]) => {
     if (id === HUMAN) {
-      return [id, "X"] as Pending;
+      return [id, "X"] as Instruction<Expression>;
     } else if (Number.isNaN(Number.parseInt(n as string))) {
-      return [id, n] as Unknown;
+      return [id, n] as Instruction<Operation>;
     } else {
-      return [id, parseFloat(n as string)] as Resolved;
+      return [id, parseFloat(n as string)] as Instruction<number>;
     }
   });
 
   // could be a Map<id, number> instead of tuple array for better performance?
   const resolved = parsed.filter(
     ([_id, n]) => typeof n === "number" || n === "X"
-  ) as (Resolved | Pending)[];
+  ) as Instruction<Expression | number>[];
   console.log("#resolved", resolved.length);
 
+  // use Partition fn to partition into resolved and unknown
   const unknown = parsed.filter(
     ([_id, n]) => typeof n === "string" && n !== "X"
-  ) as Unknown[];
+  ) as Instruction<Operation>[];
 
   console.log("#unknown", unknown.length);
 
   let i = 0;
 
-  while (unknown.length !== 0) {
+  while (unknown.length) {
     const [id, n] = unknown.shift() as [string, Operation];
-    // console.log(`id: ${id}, n: ${n}`);
 
     const [left, operand, right] = n.trim().split(" ") as [
       left: string,
-      operand: Operand,
+      operand: Operator,
       right: string
     ];
     // console.log(`left: ${left}, operand: ${operand}, right: ${right}`);
@@ -55,9 +53,6 @@ async function getRootSum(filename = REAL_INPUT) {
     const rn = resolved.find(([id]) => id === right);
 
     if (ln && rn) {
-      // console.log(`ln: ${ln}`);
-      // console.log(`rn: ${rn}`);
-
       const statement = `${ln[1]} ${operand} ${rn[1]}`;
       if (typeof ln[1] === "string" || typeof rn[1] === "string") {
         if (id === "root") {
@@ -89,125 +84,91 @@ async function getRootSum(filename = REAL_INPUT) {
   if (!root) {
     throw new Error(`Root not found`);
   }
-  const answer = solve(root[1] as string);
+  const answer = solve(root[1] as Expression);
   console.log("answer:", answer);
 }
 
 function solve(e: Expression): number {
-  const [left, right] = arrangeExpression(e);
+  const [operand, operator, rest, right] = arrangeExpression(e);
 
-  // console.log(`right=${right}`);
-  // console.log(`left=${left}`);
-
-  if (left === "X") {
-    return parseFloat(right);
+  if (!operator) {
+    return right;
   }
 
-  // left = right
-  else if (left.includes("X")) {
-    // always true?
-    const [oL, operator] = left.split(" ", 2);
-    const oR = left.slice(left.indexOf(operator) + 1).trim();
-    console.log(`l: ${oL}, o: ${operator}, r: ${oR}`);
-
-    const [dRight, dR, dL] = [right, oR, oL].map(parseFloat);
-
-    // console.log(
-    //   `dRight: ${dRight}, dR: ${dR}, dL: ${dL}, operand: ${operator}`
-    // );
-
-    // return l.includes("X")
-    //   ? solve(`${l} = ${eval(`${dRight} ${o} ${dR}`)}`)
-    //   : solve(`${r} = ${eval(`${dRight} ${o} ${dR}`)}`);
-    if (operator === "+") {
-      return oL.includes("X")
-        ? solve(`${oL} = ${dRight - dR}`)
-        : solve(`${oR} = ${dRight - dL}`);
-      // return solve(`${r} = ${dRight - dL}`);
-    } else if (operator === "-") {
-      return oL.includes("X")
-        ? solve(`${oL} = ${dRight + dR}`)
-        : solve(`${oR} = ${dL - dRight}`);
-      // return solve(`${r} = ${dRight + dL}`);
-    } else if (operator === "*") {
-      return oL.includes("X")
-        ? solve(`${oL} = ${dRight / dR}`)
-        : solve(`${oR} = ${dRight / dL}`);
-      // return solve(`${r} = ${dRight / dL}`);
-    } else {
-      return oL.includes("X")
-        ? solve(`${oL} = ${dRight * dR}`)
-        : solve(`${oR} = ${dL / dRight}`);
-      // return solve(`${r} = ${dRight * dL}`);
-    }
+  if (operator === "+") {
+    return solve(`${rest} = ${right - operand}`);
+  } else if (operator === "-") {
+    return solve(`${rest} = ${operand - right}`);
+  } else if (operator === "*") {
+    return solve(`${rest} = ${right / operand}`);
+  } else {
+    return solve(`${rest} = ${operand / right}`);
   }
-  return Number.POSITIVE_INFINITY;
 }
 
-function arrangeExpression(e: Expression): [unsolved: string, solved: string] {
-  const [left, right] = e.split("=").map((variable) => {
-    const trimmed = variable.trim();
-    return trimmed.startsWith("(") && trimmed.endsWith(")")
-      ? trimmed.slice(1, -1)
-      : trimmed;
-  });
+function arrangeExpression(
+  e: Expression
+): [operand: number, operator: Operator, rest: Expression, right: number] {
+  let [left, right] = e
+    .split("=")
+    .map((variable) => {
+      const trimmed = variable.trim();
+      return trimmed.startsWith("(") && trimmed.endsWith(")")
+        ? trimmed.slice(1, -1)
+        : trimmed;
+    })
+    .sort((_a, b) => b.indexOf("X"));
 
-  if (left.startsWith("(")) {
+  let fromEnd = false;
+  if (left.startsWith("(") || left.startsWith("X")) {
     const variableAndOperator = left
-      .split("")
-      .splice(left.lastIndexOf(")") + 1)
-      .join("")
+      .substring(left.lastIndexOf(")") + 1)
       .split(" ")
       .reverse()
       .join(" ");
-    const leftArranged =
+    left =
       variableAndOperator +
       left
         .split("")
         .splice(0, left.lastIndexOf(")") + 1)
         .join("");
 
-    const [l, o] = leftArranged.split(" ", 2);
-
-    if (o === "-") {
-      return [
-        [
-          `${parseFloat(l) * -1}`,
-          " +",
-          ...leftArranged.slice(leftArranged.indexOf(o) + 1),
-        ].join(""),
-        right,
-      ];
-    }
-
-    if (o === "/") {
-      return [
-        [
-          `${1 / parseFloat(l)}`,
-          " *",
-          ...leftArranged.slice(leftArranged.indexOf(o) + 1),
-        ].join(""),
-        right,
-      ];
-    }
-
-    return [leftArranged, right];
+    fromEnd = true;
   }
 
-  return left.includes("X") ? [left, right] : [right, left];
+  const [l, o] = left.split(" ", 2) as [string, Operator];
+  const rest = left.slice(left.indexOf(o) + 1);
+
+  let operand: number | "X" = l === "X" ? "X" : parseFloat(l);
+  let operator = o;
+
+  if (fromEnd && o === "-") {
+    operand = l === "X" ? "X" : parseFloat(l) * -1;
+    operator = "+";
+  }
+
+  if (fromEnd && o === "/") {
+    operand = l === "X" ? "X" : 1 / parseFloat(l);
+    operator = "*";
+  }
+
+  if (operand === "X") {
+    return [parseFloat(rest.trim()), operator, "X", parseFloat(right)];
+  }
+  return [operand, operator, rest.trim(), parseFloat(right)];
 }
 
-async function readInput(filename: string): Promise<Instruction[]> {
+async function readInput(filename: string): Promise<Instruction<unknown>[]> {
   const processor = await createLineProcessor(filename);
 
-  const input: Instruction[] = [];
+  const input: Instruction<unknown>[] = [];
 
   function callback(line: string | string[]) {
     if (typeof line !== "string") {
       throw new Error(`Oops, lines: ${line}`);
     }
 
-    input.push(line.split(":") as Instruction);
+    input.push(line.split(":") as Instruction<unknown>);
   }
 
   try {
