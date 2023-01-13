@@ -1,5 +1,5 @@
 import { REAL_INPUT, TEST_INPUT } from "../utils/globals";
-import { Map, printMap } from "../utils";
+import { Map, Index, printMap } from "../utils";
 import createLineProcessor from "../utils/lineProcessor";
 
 async function countSand(filename = REAL_INPUT) {
@@ -45,7 +45,6 @@ const SAND_AT_REST = "o" as const;
 const TILES = [ROCK, AIR, SAND_SOURCE, SAND_AT_REST] as const;
 
 type Tiles = typeof TILES[number];
-type Index = [row: number, col: number];
 type Vector = Index[];
 
 function simulateSand(map: Map<Tiles>): {

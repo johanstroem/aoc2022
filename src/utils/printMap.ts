@@ -1,4 +1,5 @@
-export type Map<T = number> = ReadonlyArray<ReadonlyArray<T>>;
+export type Map<T extends string | number = number> = ReadonlyArray<ReadonlyArray<T>>;
+export type Index = [row: number, col: number];
 
 function printMap<T extends string | number = number>({
   map,
