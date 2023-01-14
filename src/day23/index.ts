@@ -116,15 +116,15 @@ async function countGroundTiles(filename = REAL_INPUT) {
 
   // const [rMin, cMin, rMax, cMax] = getBoundingBox(elves);
 
-  printMap({ map: toMap(elves) });
+  // printMap({ map: toMap(elves) });
 
-  const ITERATIONS = 10;
+  const ITERATIONS = 10000;
 
   const order = [...MOVES];
 
   for (let i = 0; i < ITERATIONS; i++) {
     // Only works for first iteration?
-    console.log("order", order);
+    // console.log("order", order);
     // const direction = order.shift();
     // order.push(direction!)
 
@@ -180,6 +180,11 @@ async function countGroundTiles(filename = REAL_INPUT) {
         moves[moveDirection].push(e);
       }
     }
+
+    if (Object.keys(moves).every((dir) => moves[dir as Moves].length === 0)) {
+      console.log(`NO MORE MOVES: [${i}]`);
+      break;
+    }
     // console.log("next1", next);
 
     // console.log("moves", moves);
@@ -195,7 +200,7 @@ async function countGroundTiles(filename = REAL_INPUT) {
     // console.log("eastBound", eastBound);
 
     for (const [dir, m] of Object.entries(moves)) {
-      console.log("dir:", dir, "m:", m);
+      // console.log("dir:", dir, "m:", m);
       if (dir === "N") {
         const rest = new Set([...southBound, ...westBound, ...eastBound]);
         // console.log("rest", rest);
@@ -222,19 +227,19 @@ async function countGroundTiles(filename = REAL_INPUT) {
       }
     }
 
-    console.log("next2", next);
+    // console.log("next2", next);
     // const [rMin, cMin, rMax, cMax] = getBoundingBox(next);
     elves = next;
 
-    printMap({
-      map: toMap(elves),
-      // size: {
-      //   minRow: rMin,
-      //   rows: rMax,
-      //   minCol: cMin,
-      //   cols: cMax,
-      // },
-    }); // LOOKS CORRECT, DO IT 9 MORE TIMES
+    // printMap({
+    //   map: toMap(elves),
+    //   // size: {
+    //   //   minRow: rMin,
+    //   //   rows: rMax,
+    //   //   minCol: cMin,
+    //   //   cols: cMax,
+    //   // },
+    // });
 
     // Update order
     order.push(order.shift()!);
@@ -246,7 +251,13 @@ async function countGroundTiles(filename = REAL_INPUT) {
   const [rMin, cMin, rMax, cMax] = getBoundingBox(elves);
 
   console.log("#elves:", elves.size);
-  console.log("#Ground tiles:", (rMax - rMin + 1) * (cMax - cMin + 1) - elves.size);
+  console.log(
+    "#Ground tiles:",
+    (rMax - rMin + 1) * (cMax - cMin + 1) - elves.size
+  );
+  printMap({
+    map: toMap(elves),
+  });
 }
 
 function toMap(set: Set<string>): Map<"X" | "."> {
